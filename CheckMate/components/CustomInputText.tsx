@@ -1,14 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  View,
-  TextInput,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  GestureResponderEvent,
   Dimensions,
+  GestureResponderEvent,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 interface CustomInputProps {
   value: string;
@@ -18,8 +18,8 @@ interface CustomInputProps {
   multiline?: boolean;
   numberOfLines?: number;
   maxLength?: number;
-  iconName?: keyof typeof Ionicons.glyphMap; 
-  onIconPress?: (event: GestureResponderEvent) => void; 
+  iconName?: keyof typeof Ionicons.glyphMap;
+  onIconPress?: (event: GestureResponderEvent) => void;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -47,15 +47,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
             styles.input,
             multiline && { height: numberOfLines * 24 },
             error && styles.inputError,
-            iconName && { paddingRight: 4 }, 
+            iconName && { paddingRight: 4 },
           ]}
           placeholderTextColor="#999"
         />
         {iconName && (
-          <TouchableOpacity
-            onPress={onIconPress}
-            style={styles.iconWrapper}
-          >
+          <TouchableOpacity onPress={onIconPress} style={styles.iconWrapper}>
             <Ionicons name={iconName} size={20} color="#666" />
           </TouchableOpacity>
         )}
@@ -82,8 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   input: {
-    
-    width: Dimensions.get("screen").width * 0.95,
+    width: Dimensions.get("screen").width * 0.9,
     marginTop: 8,
     borderWidth: 1,
     borderColor: "#ccc",
@@ -95,17 +91,17 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-    paddingVertical: 16,
-    paddingHorizontal: 20
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   inputError: {
     borderColor: "#ff4d4d",
   },
   iconWrapper: {
-  paddingHorizontal: 8,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    paddingHorizontal: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   errorText: {
     color: "#ff4d4d",
     marginTop: 4,

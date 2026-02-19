@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "@/App";
+import ScreenWrapper from "@/components/ScreenWrapper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomHeader from "../../components/CustomHeader";
 import CustomInput from "../../components/CustomInputText";
@@ -75,28 +76,30 @@ export default function Home({ navigation, route }: Props) {
 
   return (
     <View style={[screenContainer, { paddingTop: insets.top }]}>
-      <View style={centerContainer}>
-        <CustomHeader user={user} onLogout={handleLogout} />
+      <ScreenWrapper>
+        <View style={centerContainer}>
+          <CustomHeader user={user} onLogout={handleLogout} />
 
-        <CustomInput
-          placeholder="Yeni To-Do"
-          value={todo}
-          onChangeText={setTodo}
-          maxLength={50}
-          error={todo.length > 50 ? "Todo çok uzun!" : undefined}
-        />
-
-        <NiceButton title="Ekle" status="default" onPress={addTodo} />
-      </View>
-      <View style={{ flex: 1, width: "100%" }}>
-        <GestureHandlerRootView>
-          <TodoList
-            todos={todoList}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
+          <CustomInput
+            placeholder="Yeni To-Do"
+            value={todo}
+            onChangeText={setTodo}
+            maxLength={50}
+            error={todo.length > 50 ? "Todo çok uzun!" : undefined}
           />
-        </GestureHandlerRootView>
-      </View>
+
+          <NiceButton title="Ekle" status="default" onPress={addTodo} />
+        </View>
+        <View style={{ flex: 1, width: "100%" }}>
+          <GestureHandlerRootView>
+            <TodoList
+              todos={todoList}
+              onToggle={toggleTodo}
+              onDelete={deleteTodo}
+            />
+          </GestureHandlerRootView>
+        </View>
+      </ScreenWrapper>
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
+  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -95,6 +96,7 @@ export default TodoItem;
 
 const styles = StyleSheet.create({
   container: {
+    width: Dimensions.get("screen").width * 0.9,
     backgroundColor: "#fff",
     borderRadius: 35,
     borderWidth: 1,
