@@ -76,7 +76,11 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
     ({ item, index }: ListRenderItemInfo<Todo>) => (
       <Swipeable
         ref={(ref) => {
-          swipeableRefs.current.set(index, ref);
+          if (ref) {
+            swipeableRefs.current.set(index, ref);
+          } else {
+            swipeableRefs.current.delete(index);
+          }
         }}
         friction={2}
         overshootRight={false}

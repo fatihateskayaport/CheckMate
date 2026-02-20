@@ -1,6 +1,6 @@
-import { Text, TextStyle, StyleProp } from "react-native";
-import { COLORS, SIZES, ColorKeys, SizeKeys } from "../constants/theme";
 import { ReactNode } from "react";
+import { StyleProp, Text, TextStyle } from "react-native";
+import { ColorKeys, COLORS, SizeKeys, SIZES } from "../constants/theme";
 
 type Props = {
   children: ReactNode;
@@ -29,4 +29,3 @@ export default function CustomText({
     </Text>
   );
 }
-

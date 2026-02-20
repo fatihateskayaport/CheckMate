@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from "react";
 
-
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type CustomHeaderProps = {
   user?: string;
@@ -49,7 +48,10 @@ const CustomHeader = ({ user = "Misafir", onLogout }: CustomHeaderProps) => {
 
   return (
     <Animated.View
-      style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+      style={[
+        styles.header,
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+      ]}
     >
       <TouchableOpacity
         onPress={onLogout}
@@ -58,7 +60,11 @@ const CustomHeader = ({ user = "Misafir", onLogout }: CustomHeaderProps) => {
         accessibilityLabel="Çıkış yap"
       >
         <View style={styles.iconBg}>
-          <MaterialCommunityIcons name="exit-to-app" size={20} color="#6B7280" />
+          <MaterialCommunityIcons
+            name="exit-to-app"
+            size={20}
+            color="#6B7280"
+          />
         </View>
       </TouchableOpacity>
 
@@ -87,7 +93,7 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundBlendMode: "#111827",
     paddingHorizontal: 16,
     position: "relative",
     shadowColor: "#000",
@@ -151,7 +157,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    // Soft shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,

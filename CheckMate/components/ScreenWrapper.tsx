@@ -10,7 +10,7 @@ type Props = {
 const ScreenWrapper = ({ children, style }: Props) => {
   return (
     <LinearGradient
-      colors={["#1a1a2e", "#16213e", "#0f3460"]}
+      colors={["#EEF2FF", "#E0E7FF", "#F5F3FF"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.gradient, style]}

@@ -8,8 +8,6 @@ import { RootStackParamList } from "@/App";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomHeader from "../../components/CustomHeader";
-import CustomInput from "../../components/CustomInputText";
-import NiceButton from "../../components/niceButton";
 import TodoList from "../../components/TodoList";
 import { centerContainer, screenContainer } from "../../constants/styles";
 import { Todo } from "./types";
@@ -32,22 +30,6 @@ export default function Home({ navigation, route }: Props) {
     };
     loadTodos();
   }, [STORAGE_KEY]);
-
-  const addTodo = async () => {
-    if (!todo.trim()) return;
-
-    const newTodo: Todo = {
-      text: todo,
-      completed: false,
-      createdAt: Date.now(),
-    };
-
-    const updated = [newTodo, ...todoList];
-    setTodoList(updated);
-    setTodo("");
-
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
 
   const deleteTodo = async (index: number) => {
     const updated = todoList.filter((_, i) => i !== index);
@@ -79,16 +61,6 @@ export default function Home({ navigation, route }: Props) {
       <ScreenWrapper>
         <View style={centerContainer}>
           <CustomHeader user={user} onLogout={handleLogout} />
-
-          <CustomInput
-            placeholder="Yeni To-Do"
-            value={todo}
-            onChangeText={setTodo}
-            maxLength={50}
-            error={todo.length > 50 ? "Todo çok uzun!" : undefined}
-          />
-
-          <NiceButton title="Ekle" status="default" onPress={addTodo} />
         </View>
         <View style={{ flex: 1, width: "100%" }}>
           <GestureHandlerRootView>
