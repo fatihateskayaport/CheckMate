@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputWrapper: {
-    width: Dimensions.get("screen").width * 0.9,
+    width: Dimensions.get("screen").width * 0.79,
     position: "relative",
     flexDirection: "row",
     alignItems: "center",

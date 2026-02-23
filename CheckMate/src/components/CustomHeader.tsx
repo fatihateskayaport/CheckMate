@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type CustomHeaderProps = {
   user?: string;
@@ -26,6 +27,7 @@ const CustomHeader = ({
 }: CustomHeaderProps) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-8)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     Animated.parallel([
@@ -59,7 +61,11 @@ const CustomHeader = ({
     <Animated.View
       style={[
         styles.header,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+          paddingTop: insets.top,
+        },
       ]}
     >
       {showLogout && (
@@ -109,7 +115,6 @@ const CustomHeader = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 68,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",

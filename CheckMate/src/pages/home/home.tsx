@@ -4,14 +4,14 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "@/App";
-import ScreenWrapper from "@/components/ScreenWrapper";
+import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import CustomHeader from "@/components/CustomHeader";
-import TodoList from "@/components/TodoList";
+import CustomHeader from "@/src/components/CustomHeader";
+import TodoList from "@/src/components/TodoList";
 import { todoService, userService } from "@/src/services/todoService";
 import { useFocusEffect } from "@react-navigation/native";
-import { Todo } from "./types";
+import { Todo } from "../../constants/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -42,7 +42,7 @@ export default function Home({ navigation, route }: Props) {
 
   return (
     <ScreenWrapper>
-      <View style={{ paddingTop: insets.top }}>
+      <View style={{}}>
         <CustomHeader user={user} onLogout={handleLogout} />
       </View>
       <View style={{ flex: 1, width: "100%" }}>

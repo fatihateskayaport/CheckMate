@@ -1,12 +1,11 @@
-import { Todo } from "@/app/Screens/types";
+import { Todo } from "@/src/constants/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const getTodoKey = (user: string) => "TODO_" + user;
+import { STORAGE_KEYS } from "../constants/storageKeys";
 
 export const todoService = {
   //TÜM TODOLARI GETİR-----------------------------
   getAll: async (user: string): Promise<Todo[]> => {
-    const stored = await AsyncStorage.getItem(getTodoKey(user));
+    const stored = await AsyncStorage.getItem(STORAGE_KEYS.TODO(user));
     return stored ? JSON.parse(stored) : [];
   },
 
@@ -19,7 +18,10 @@ export const todoService = {
       createdAt: Date.now(),
     };
     const updated = [newTodo, ...existing];
-    await AsyncStorage.setItem(getTodoKey(user), JSON.stringify(updated));
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.TODO(user),
+      JSON.stringify(updated),
+    );
     return updated;
   },
 
@@ -27,7 +29,10 @@ export const todoService = {
   delete: async (user: string, index: number): Promise<Todo[]> => {
     const existing = await todoService.getAll(user);
     const updated = existing.filter((_, i) => i !== index);
-    await AsyncStorage.setItem(getTodoKey(user), JSON.stringify(updated));
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.TODO(user),
+      JSON.stringify(updated),
+    );
     return updated;
   },
 
@@ -44,7 +49,10 @@ export const todoService = {
         }
         return b.createdAt - a.createdAt;
       });
-    await AsyncStorage.setItem(getTodoKey(user), JSON.stringify(updated));
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.TODO(user),
+      JSON.stringify(updated),
+    );
     return updated;
   },
 };
@@ -53,11 +61,11 @@ export const todoService = {
 export const userService = {
   //Kullanıcı Adını Kaydet-----------------------
   save: async (username: string): Promise<void> => {
-    await AsyncStorage.setItem("USERNAME", username);
+    await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
   },
   //Kullanıcı Adını Getir-----------------------
   get: async (): Promise<string> => {
-    return (await AsyncStorage.getItem("USERNAME")) ?? "Misafir";
+    return (await AsyncStorage.getItem(STORAGE_KEYS.USERNAME)) ?? "Misafir";
   },
   //Kullanıcı Çıkış Yap-----------------------
   clear: async (): Promise<void> => {

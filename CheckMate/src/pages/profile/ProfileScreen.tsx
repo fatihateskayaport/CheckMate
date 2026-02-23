@@ -1,4 +1,5 @@
-import ScreenWrapper from "@/components/ScreenWrapper";
+import ScreenWrapper from "@/src/components/ScreenWrapper";
+import TodoBottomSheet from "@/src/pages/profile/components/TodoBottomSheet";
 import { todoService, userService } from "@/src/services/todoService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -12,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Todo } from "../../constants/types";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,12 +29,14 @@ const StatCard = ({
   label,
   color,
   delay,
+  onPress,
 }: {
   icon: string;
   value: number;
   label: string;
   color: string;
   delay: number;
+  onPress?: () => void;
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -54,18 +58,20 @@ const StatCard = ({
     ]).start();
   }, []);
   return (
-    <Animated.View
-      style={[
-        styles.statCard,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
-      <View style={[styles.statIconBg, { backgroundColor: color + "20" }]}>
-        <MaterialCommunityIcons name={icon as any} size={22} color={color} />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </Animated.View>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{ flex: 1 }}>
+      <Animated.View
+        style={[
+          styles.statCard,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+        ]}
+      >
+        <View style={[styles.statIconBg, { backgroundColor: color + "20" }]}>
+          <MaterialCommunityIcons name={icon as any} size={22} color={color} />
+        </View>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </Animated.View>
+    </TouchableOpacity>
   );
 };
 
@@ -97,6 +103,8 @@ export default function ProfileScreen({ route, navigation }: Props) {
     .toUpperCase()
     .slice(0, 2);
 
+  const [allTodos, setAllTodos] = useState<Todo[]>([]);
+
   useFocusEffect(
     useCallback(() => {
       Animated.parallel([
@@ -114,6 +122,7 @@ export default function ProfileScreen({ route, navigation }: Props) {
       ]).start();
 
       todoService.getAll(user).then((todos) => {
+        setAllTodos(todos);
         const completed = todos.filter((t) => t.completed).length;
         const total = todos.length;
         const pending = total - completed;
@@ -127,6 +136,32 @@ export default function ProfileScreen({ route, navigation }: Props) {
   const handleLogout = async () => {
     await userService.clear();
     navigation?.replace("Login", { logout: true });
+  };
+
+  const [sheetData, setSheetData] = useState<{
+    visible: boolean;
+    title: string;
+    todos: Todo[];
+  }>({ visible: false, title: "", todos: [] });
+
+  const handleStatPress = (type: "total" | "completed" | "pending") => {
+    const filtered =
+      type === "total"
+        ? allTodos
+        : type === "completed"
+          ? allTodos.filter((t) => t.completed)
+          : allTodos.filter((t) => !t.completed);
+
+    setSheetData({
+      visible: true,
+      title:
+        type === "total"
+          ? "Tüm Görevler"
+          : type === "completed"
+            ? "Tamamlananlar"
+            : "Bekleyenler",
+      todos: filtered,
+    });
   };
 
   return (
@@ -176,6 +211,7 @@ export default function ProfileScreen({ route, navigation }: Props) {
           label="Toplam"
           color="#6366F1"
           delay={100}
+          onPress={() => handleStatPress("total")}
         />
         <StatCard
           icon="check-circle-outline"
@@ -183,6 +219,7 @@ export default function ProfileScreen({ route, navigation }: Props) {
           label="Tamamlanan"
           color="#22C55E"
           delay={400}
+          onPress={() => handleStatPress("completed")}
         />
         <StatCard
           icon="clock-outline"
@@ -190,6 +227,7 @@ export default function ProfileScreen({ route, navigation }: Props) {
           label="Bekleyen"
           color="#F59E0B"
           delay={600}
+          onPress={() => handleStatPress("pending")}
         />
       </View>
 
@@ -219,6 +257,12 @@ export default function ProfileScreen({ route, navigation }: Props) {
           <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
       </View>
+      <TodoBottomSheet
+        visible={sheetData.visible}
+        onClose={() => setSheetData((prev) => ({ ...prev, visible: false }))}
+        title={sheetData.title}
+        todos={sheetData.todos}
+      />
     </ScreenWrapper>
   );
 }
@@ -309,9 +353,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statCard: {
-    flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 35,
     padding: 16,
     alignItems: "center",
     gap: 6,
@@ -345,7 +388,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     marginHorizontal: 20,
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 35,
     padding: 20,
     shadowColor: "#6366F1",
     shadowOffset: { width: 0, height: 4 },
@@ -392,7 +435,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: "#FEF2F2",
-    borderRadius: 16,
+    borderRadius: 35,
     paddingVertical: 16,
     borderWidth: 1,
     borderColor: "#FECACA",

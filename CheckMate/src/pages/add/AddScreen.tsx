@@ -1,16 +1,14 @@
-import CustomHeader from "@/components/CustomHeader";
-import CustomInput from "@/components/CustomInputText";
-import NiceButton from "@/components/niceButton";
-import ScreenWrapper from "@/components/ScreenWrapper";
-import { centerContainer } from "@/constants/styles";
+import CustomHeader from "@/src/components/CustomHeader";
+import CustomInput from "@/src/components/CustomInputText";
+import NiceButton from "@/src/components/NiceButton";
+import ScreenWrapper from "@/src/components/ScreenWrapper";
+import { centerContainer } from "@/src/constants/styles";
+import { Todo } from "@/src/constants/types";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Todo } from "./types";
-
-type Props = NativeStackScreenProps<any, any>;
 
 export default function AddScreen() {
   const [userName, setUserName] =
@@ -26,7 +24,6 @@ export default function AddScreen() {
 
   useEffect(() => {
     getUserName();
-    console.log(userName);
   }, []);
 
   const addTodo = async () => {
@@ -34,7 +31,6 @@ export default function AddScreen() {
 
     const userName = (await AsyncStorage.getItem("USERNAME")) ?? "Misafir";
     const TODO_KEY = `TODO_${userName}`;
-    console.log("AddScreen TODO_KEY:", TODO_KEY);
 
     const stored = await AsyncStorage.getItem(TODO_KEY);
     const existing: Todo[] = stored ? JSON.parse(stored) : [];

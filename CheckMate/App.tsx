@@ -1,16 +1,17 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import AddScreen from "./app/Screens/AddScreen";
-import Home from "./app/Screens/home";
-import Login from "./app/Screens/Login";
-import ProfileScreen from "./app/Screens/ProfileScreen";
-import CustomTabBar from "./components/CustomTabBar";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
+import CustomTabBar from "./src/components/CustomTabBar";
+import AddScreen from "./src/pages/add/AddScreen";
+import Home from "./src/pages/home/home";
+import Login from "./src/pages/login/Login";
+import ProfileScreen from "./src/pages/profile/ProfileScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -48,7 +49,7 @@ function MainTabs({ route }: any) {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="Login"
@@ -58,7 +59,7 @@ export default function App() {
             <Stack.Screen name="Home" component={MainTabs} />
           </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaView>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

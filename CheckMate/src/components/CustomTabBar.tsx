@@ -132,8 +132,8 @@ const TabItem = ({
 const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.wrapper, { paddingBottom: insets.bottom || 16 }]}>
-      <View style={styles.container}>
+    <View style={styles.wrapper}>
+      <View style={[styles.container, { paddingBottom: insets.bottom || 16 }]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const onPress = () => {

@@ -1,8 +1,12 @@
-import { Pressable, Text, StyleProp, TextStyle, ViewStyle } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
-import { COLORS } from "../constants/theme";
-import { button } from "./DefaultButtons"; 
 import { ReactNode } from "react";
+import { Pressable, StyleProp, Text, TextStyle, ViewStyle } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { button } from "../components/DefaultButtons";
+import { COLORS } from "../constants/theme";
 
 export type ButtonStatus = "default" | "disabled" | "loading";
 
@@ -46,13 +50,7 @@ export default function NiceButton({
       onPress={isPressable ? onPress : undefined}
       disabled={!isPressable}
     >
-      <Animated.View
-        style={[
-          button({ width: "auto" }),
-          animatedStyle,
-          style,
-        ]}
-      >
+      <Animated.View style={[button({ width: "auto" }), animatedStyle, style]}>
         {icon}
         <Text style={[{ color: COLORS.white, fontWeight: "600" }, textStyle]}>
           {title}
