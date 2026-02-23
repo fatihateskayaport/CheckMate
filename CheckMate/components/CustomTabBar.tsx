@@ -11,7 +11,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+const scale = width / 390;
 
 const ICONS: Record<
   string,
@@ -165,7 +166,6 @@ const styles = StyleSheet.create({
   wrapper: {
     left: 0,
     right: 0,
-
     backgroundColor: "transparent",
   },
   container: {
@@ -174,27 +174,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.012,
     shadowColor: "#6366F1",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 12,
   },
   tabItem: { flex: 1, alignItems: "center" },
-  tabInner: { alignItems: "center", gap: 3 },
+  tabInner: { alignItems: "center", gap: 4 },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+    width: width * 0.11,
+    height: width * 0.11,
+    borderRadius: width * 0.035,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F5F3FF",
+    borderWidth: 1,
+    borderColor: "#E8E4FF",
   },
-  iconContainerActive: { backgroundColor: "#EEF2FF" },
+  iconContainerActive: {
+    backgroundColor: "#EEF2FF",
+    borderColor: "#C7D2FE",
+  },
   label: {
-    fontSize: 10,
+    fontSize: Math.round(10 * scale),
     fontWeight: "500",
     color: "#9CA3AF",
     letterSpacing: 0.2,
@@ -204,19 +209,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -24,
+    marginTop: -(height * 0.01),
   },
   addButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 20,
+    width: width * 0.17,
+    height: width * 0.17,
+    borderRadius: width * 0.05,
     backgroundColor: "#6366F1",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#6366F1",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 16,
+    borderWidth: 4,
+    borderColor: "#fff",
   },
 });

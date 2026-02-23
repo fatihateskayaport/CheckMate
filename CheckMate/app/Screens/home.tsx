@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
@@ -10,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import CustomHeader from "@/components/CustomHeader";
 import TodoList from "@/components/TodoList";
-import { centerContainer, screenContainer } from "@/constants/styles";
+import { todoService, userService } from "@/src/services/todoService";
 import { useFocusEffect } from "@react-navigation/native";
 import { Todo } from "./types";
 
@@ -18,64 +17,43 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export default function Home({ navigation, route }: Props) {
   const user = route.params?.user ?? "Misafir";
-
-  const [todo, setTodo] = useState("");
   const [todoList, setTodoList] = useState<Todo[]>([]);
-
-  const STORAGE_KEY = `TODO_${user}`;
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
-      const loadTodos = async () => {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) setTodoList(JSON.parse(stored));
-      };
-      loadTodos();
-    }, [STORAGE_KEY]),
+      todoService.getAll(user).then(setTodoList);
+    }, [user]),
   );
-
   const deleteTodo = async (index: number) => {
-    const updated = todoList.filter((_, i) => i !== index);
+    const updated = await todoService.delete(user, index);
     setTodoList(updated);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   };
 
   const toggleTodo = async (index: number) => {
-    const updated = todoList
-      .map((item, i) =>
-        i === index ? { ...item, completed: !item.completed } : item,
-      )
-      .sort((a, b) => {
-        if (a.completed !== b.completed) {
-          return Number(a.completed) - Number(b.completed);
-        }
-        return b.createdAt - a.createdAt;
-      });
+    const updated = await todoService.toggle(user, index);
     setTodoList(updated);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await userService.clear();
     navigation.replace("Login", { logout: true });
   };
 
   return (
-    <View style={[screenContainer, { paddingTop: insets.top }]}>
-      <ScreenWrapper>
-        <View style={centerContainer}>
-          <CustomHeader user={user} onLogout={handleLogout} />
-        </View>
-        <View style={{ flex: 1, width: "100%" }}>
-          <GestureHandlerRootView>
-            <TodoList
-              todos={todoList}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-            />
-          </GestureHandlerRootView>
-        </View>
-      </ScreenWrapper>
-    </View>
+    <ScreenWrapper>
+      <View style={{ paddingTop: insets.top }}>
+        <CustomHeader user={user} onLogout={handleLogout} />
+      </View>
+      <View style={{ flex: 1, width: "100%" }}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <TodoList
+            todos={todoList}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+          />
+        </GestureHandlerRootView>
+      </View>
+    </ScreenWrapper>
   );
 }

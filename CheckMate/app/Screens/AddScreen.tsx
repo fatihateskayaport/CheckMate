@@ -1,12 +1,13 @@
+import CustomHeader from "@/components/CustomHeader";
 import CustomInput from "@/components/CustomInputText";
 import NiceButton from "@/components/niceButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { centerContainer } from "@/constants/styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Todo } from "./types";
-
 
 type Props = NativeStackScreenProps<any, any>;
 
@@ -32,6 +33,7 @@ export default function AddScreen() {
 
     const userName = (await AsyncStorage.getItem("USERNAME")) ?? "Misafir";
     const TODO_KEY = `TODO_${userName}`;
+    console.log("AddScreen TODO_KEY:", TODO_KEY);
 
     const stored = await AsyncStorage.getItem(TODO_KEY);
     const existing: Todo[] = stored ? JSON.parse(stored) : [];
@@ -48,8 +50,13 @@ export default function AddScreen() {
   };
   return (
     <ScreenWrapper>
-      <View style={styles.center}>
-        <Text style={styles.text}>Ekle Sayfası</Text>
+      <View style={centerContainer}>
+        <CustomHeader
+          text="Yeni To-Do Ekle"
+          user={userName}
+          showLogout={false}
+        />
+
         <CustomInput
           placeholder="Yeni To-Do"
           value={todo}

@@ -36,8 +36,12 @@ function MainTabs({ route }: any) {
         component={HomeWrapper}
         initialParams={{ user }}
       />
-      <Tab.Screen name="Add" component={AddScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Add" component={AddScreen} initialParams={{ user }} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        initialParams={{ user }}
+      />
     </Tab.Navigator>
   );
 }

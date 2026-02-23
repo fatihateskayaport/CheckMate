@@ -12,9 +12,18 @@ import {
 type CustomHeaderProps = {
   user?: string;
   onLogout?: () => void;
+  text?: string;
+  showLogout?: boolean;
+  showAvatar?: boolean;
 };
 
-const CustomHeader = ({ user = "Misafir", onLogout }: CustomHeaderProps) => {
+const CustomHeader = ({
+  user = "Misafir",
+  onLogout,
+  text,
+  showLogout = true,
+  showAvatar = true,
+}: CustomHeaderProps) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-8)).current;
 
@@ -53,35 +62,46 @@ const CustomHeader = ({ user = "Misafir", onLogout }: CustomHeaderProps) => {
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
       ]}
     >
-      <TouchableOpacity
-        onPress={onLogout}
-        style={styles.iconButton}
-        activeOpacity={0.7}
-        accessibilityLabel="Çıkış yap"
-      >
-        <View style={styles.iconBg}>
-          <MaterialCommunityIcons
-            name="exit-to-app"
-            size={20}
-            color="#6B7280"
-          />
-        </View>
-      </TouchableOpacity>
+      {showLogout && (
+        <TouchableOpacity
+          onPress={onLogout}
+          style={styles.iconButton}
+          activeOpacity={0.7}
+        >
+          <View style={styles.iconBg}>
+            <MaterialCommunityIcons
+              name="exit-to-app"
+              size={20}
+              color="#6B7280"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.center} pointerEvents="none">
-        <Text style={styles.greeting}>Merhaba 👋</Text>
-        <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
-          {user}
-        </Text>
+        {text ? (
+          <Text style={styles.username}>{text}</Text>
+        ) : (
+          <>
+            <Text style={styles.greeting}>Merhaba 👋</Text>
+            <Text
+              style={styles.username}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {user}
+            </Text>
+          </>
+        )}
       </View>
-
-      <View style={styles.avatarWrapper}>
-        <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-          <Text style={styles.avatarText}>{initials}</Text>
+      {showAvatar && (
+        <View style={styles.avatarWrapper}>
+          <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <View style={[styles.onlineDot, { borderColor: "#F9FAFB" }]} />
         </View>
-        <View style={[styles.onlineDot, { borderColor: "#F9FAFB" }]} />
-      </View>
-
+      )}
       <View style={styles.bottomLine} />
     </Animated.View>
   );

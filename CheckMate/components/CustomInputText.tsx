@@ -51,6 +51,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
           ]}
           placeholderTextColor="#999"
         />
+        {maxLength && (
+          <Text style={styles.charCount}>
+            {value.length}/{maxLength}
+          </Text>
+        )}
+
         {iconName && (
           <TouchableOpacity onPress={onIconPress} style={styles.iconWrapper}>
             <Ionicons name={iconName} size={20} color="#666" />
@@ -58,11 +64,6 @@ const CustomInput: React.FC<CustomInputProps> = ({
         )}
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
-      {maxLength && (
-        <Text style={styles.charCount}>
-          {value.length}/{maxLength}
-        </Text>
-      )}
     </View>
   );
 };
@@ -74,25 +75,28 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputWrapper: {
+    width: Dimensions.get("screen").width * 0.9,
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
-  },
-  input: {
-    width: Dimensions.get("screen").width * 0.9,
     marginTop: 8,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 35,
-    fontSize: 16,
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
     paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingRight: 38,
+    color: "#333",
   },
   inputError: {
     borderColor: "#ff4d4d",
@@ -108,9 +112,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   charCount: {
-    marginTop: 4,
-    fontSize: 12,
-    color: "#999",
-    textAlign: "right",
+    position: "absolute",
+    bottom: 16,
+    right: 20,
+    fontSize: 11,
+    color: "#bbb",
+    paddingLeft: 4,
   },
 });

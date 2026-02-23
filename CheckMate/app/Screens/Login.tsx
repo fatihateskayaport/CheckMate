@@ -1,13 +1,17 @@
+import CustomInput from "@/components/CustomInputText";
+import ScreenWrapper from "@/components/ScreenWrapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Alert, TextInput, View } from "react-native";
+import { Alert, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomText from "../../components/CustomText";
 import NiceButton, { ButtonStatus } from "../../components/niceButton";
-import { container } from "../../constants/styles";
+import { centerContainer, screenContainer } from "../../constants/styles";
 
 export default function Login({ navigation, route }: any) {
   const [username, setUsername] = useState("");
   const [status, setStatus] = useState<ButtonStatus>("default");
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -39,37 +43,30 @@ export default function Login({ navigation, route }: any) {
   };
 
   return (
-    <View
-      style={container({
-        flex: 1,
-        justify: "center",
-        align: "center",
-        padding: 24,
-      })}
-    >
-      <CustomText size="large" style={{ marginBottom: 10, fontWeight: "800" }}>
-        Hoş Geldin!
-      </CustomText>
-      <CustomText size="small" style={{ marginBottom: 20 }}>
-        Lütfen giriş yapınız.
-      </CustomText>
+    <View style={[screenContainer, { paddingTop: insets.top }]}>
+      <ScreenWrapper>
+        <View style={centerContainer}>
+          <CustomText
+            size="large"
+            style={{ marginBottom: 10, fontWeight: "800" }}
+          >
+            Hoş Geldin!
+          </CustomText>
+          <CustomText size="small" style={{ marginBottom: 20 }}>
+            Lütfen giriş yapınız.
+          </CustomText>
 
-      <TextInput
-        placeholder="Kullanıcı adınızı girin"
-        value={username}
-        onChangeText={setUsername}
-        style={{
-          width: "100%",
-          borderWidth: 1,
-          borderColor: "#ccc",
-          borderRadius: 8,
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          marginBottom: 16,
-        }}
-      />
+          <CustomInput
+            placeholder="Kullanıcı adınızı girin"
+            value={username}
+            onChangeText={setUsername}
+            maxLength={15}
+            error={username.length > 15 ? "Todo çok uzun!" : undefined}
+          />
 
-      <NiceButton title="Giriş Yap" status={status} onPress={handleLogin} />
+          <NiceButton title="Giriş Yap" status={status} onPress={handleLogin} />
+        </View>
+      </ScreenWrapper>
     </View>
   );
 }

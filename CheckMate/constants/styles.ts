@@ -1,6 +1,5 @@
-// themeStyles.js
+import { StyleSheet, TextStyle, ViewStyle } from "react-native";
 import { COLORS, SPACING } from "./theme";
-import { StyleSheet, ViewStyle, TextStyle } from "react-native";
 
 type ContainerProps = {
   flex?: number;
