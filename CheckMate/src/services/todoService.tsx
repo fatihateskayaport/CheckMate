@@ -1,10 +1,5 @@
+import { Todo } from "@/app/Screens/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-export type Todo = {
-  text: string;
-  completed: boolean;
-  createdAt: number;
-};
 
 const getTodoKey = (user: string) => "TODO_" + user;
 
