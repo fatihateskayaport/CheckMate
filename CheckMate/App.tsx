@@ -6,11 +6,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import AddScreen from "./app/screens/AddScreen";
-
-import Home from "./app/screens/home";
-import Login from "./app/screens/Login";
-import ProfileScreen from "./app/screens/ProfileScreen";
+import AddScreen from "./app/Screens/AddScreen";
+import Home from "./app/Screens/home";
+import Login from "./app/Screens/Login";
+import ProfileScreen from "./app/Screens/ProfileScreen";
 import CustomTabBar from "./components/CustomTabBar";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

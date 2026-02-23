@@ -3,11 +3,11 @@ import CustomInput from "@/components/CustomInputText";
 import NiceButton from "@/components/niceButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { centerContainer } from "@/constants/styles";
+import { Todo } from "@/src/services/todoService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Todo } from "./types";
 
 type Props = NativeStackScreenProps<any, any>;
 

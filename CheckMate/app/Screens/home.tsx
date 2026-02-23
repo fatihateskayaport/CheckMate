@@ -9,9 +9,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import CustomHeader from "@/components/CustomHeader";
 import TodoList from "@/components/TodoList";
-import { todoService, userService } from "@/src/services/todoService";
+import { Todo, todoService, userService } from "@/src/services/todoService";
 import { useFocusEffect } from "@react-navigation/native";
-import { Todo } from "./types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
