@@ -1,4 +1,4 @@
-import { Todo } from "@/app/Screens/types";
+import { Todo } from "@/app/screens/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import {

@@ -7,40 +7,45 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Todo } from "./types";
 
+
 type Props = NativeStackScreenProps<any, any>;
 
 export default function AddScreen() {
   const [userName, setUserName] =
     useState<string>(""); /* route.params?.user ?? "Misafir" */
   const [todo, setTodo] = useState("");
-  const [todoList, setTodoList] = useState<Todo[]>([]);
+
   const STORAGE_KEY = "USERNAME";
 
   const getUserName = async () => {
     const name = await AsyncStorage.getItem(STORAGE_KEY);
-    console.log("name", name);
     setUserName(name ?? "");
   };
 
   useEffect(() => {
     getUserName();
-    console.log("user", userName);
+    console.log(userName);
   }, []);
 
   const addTodo = async () => {
     if (!todo.trim()) return;
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+
+    const userName = (await AsyncStorage.getItem("USERNAME")) ?? "Misafir";
+    const TODO_KEY = `TODO_${userName}`;
+
+    const stored = await AsyncStorage.getItem(TODO_KEY);
     const existing: Todo[] = stored ? JSON.parse(stored) : [];
+
     const newTodo: Todo = {
       text: todo,
       completed: false,
       createdAt: Date.now(),
     };
+
     const updated = [newTodo, ...existing];
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    await AsyncStorage.setItem(TODO_KEY, JSON.stringify(updated));
     setTodo("");
   };
-
   return (
     <ScreenWrapper>
       <View style={styles.center}>

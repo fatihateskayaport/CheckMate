@@ -1,15 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "@/App";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import CustomHeader from "../../components/CustomHeader";
-import TodoList from "../../components/TodoList";
-import { centerContainer, screenContainer } from "../../constants/styles";
+
+import CustomHeader from "@/components/CustomHeader";
+import TodoList from "@/components/TodoList";
+import { centerContainer, screenContainer } from "@/constants/styles";
+import { useFocusEffect } from "@react-navigation/native";
 import { Todo } from "./types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
@@ -23,13 +25,15 @@ export default function Home({ navigation, route }: Props) {
   const STORAGE_KEY = `TODO_${user}`;
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const loadTodos = async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) setTodoList(JSON.parse(stored));
-    };
-    loadTodos();
-  }, [STORAGE_KEY]);
+  useFocusEffect(
+    useCallback(() => {
+      const loadTodos = async () => {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) setTodoList(JSON.parse(stored));
+      };
+      loadTodos();
+    }, [STORAGE_KEY]),
+  );
 
   const deleteTodo = async (index: number) => {
     const updated = todoList.filter((_, i) => i !== index);
