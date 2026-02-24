@@ -8,7 +8,7 @@ import Animated, {
 import { button } from "../components/DefaultButtons";
 import { COLORS } from "../constants/theme";
 
-export type ButtonStatus = "default" | "disabled" | "loading";
+export type ButtonStatus = "default" | "disabled" | "loading"| "outline";
 
 interface NiceButtonProps {
   status?: ButtonStatus;

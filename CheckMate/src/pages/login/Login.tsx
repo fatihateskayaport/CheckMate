@@ -1,6 +1,6 @@
-import CustomInput from "@/src/components/CustomInputText";
 import NiceButton, { ButtonStatus } from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
+import CustomInput from "@/src/pages/add/components/CustomInputText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";

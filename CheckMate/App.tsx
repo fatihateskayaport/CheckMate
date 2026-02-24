@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as React from "react";
+import Toast from 'react-native-toast-message';
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -8,10 +9,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import CustomTabBar from "./src/components/CustomTabBar";
+import { toastConfig } from "./src/config/toastConfig";
 import AddScreen from "./src/pages/add/AddScreen";
 import Home from "./src/pages/home/home";
 import Login from "./src/pages/login/Login";
 import ProfileScreen from "./src/pages/profile/ProfileScreen";
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -56,10 +59,18 @@ export default function App() {
             screenOptions={{ headerShown: false }}
           >
             <Stack.Screen name="Login" component={Login} />
+            
             <Stack.Screen name="Home" component={MainTabs} />
           </Stack.Navigator>
+          <Toast config={toastConfig}/>
         </NavigationContainer>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }
+
+
+
+
+
+

@@ -34,6 +34,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   onIconPress,
 }) => {
   return (
+    
     <View style={styles.container}>
       <View style={styles.inputWrapper}>
         <TextInput
@@ -72,17 +73,17 @@ export default CustomInput;
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   inputWrapper: {
-    width: Dimensions.get("screen").width * 0.79,
+    width: Dimensions.get("screen").width * 0.8,
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
     marginTop: 8,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 35,
+    borderRadius: 15,
     backgroundColor: "#fff",
     paddingHorizontal: 20,
     shadowColor: "#000",

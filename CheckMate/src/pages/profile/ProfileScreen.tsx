@@ -7,6 +7,8 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -41,7 +43,9 @@ const StatCard = ({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
-  React.useEffect(() => {
+  useFocusEffect(() => {
+    fadeAnim.setValue(0)
+    slideAnim.setValue(20)
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -56,7 +60,7 @@ const StatCard = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  },);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{ flex: 1 }}>
       <Animated.View
@@ -123,7 +127,7 @@ export default function ProfileScreen({ route, navigation }: Props) {
 
       todoService.getAll(user).then((todos) => {
         setAllTodos(todos);
-        const completed = todos.filter((t) => t.completed).length;
+        const completed = todos.filter((t) => t.isCompleted).length;
         const total = todos.length;
         const pending = total - completed;
         const completionRate =
@@ -149,8 +153,8 @@ export default function ProfileScreen({ route, navigation }: Props) {
       type === "total"
         ? allTodos
         : type === "completed"
-          ? allTodos.filter((t) => t.completed)
-          : allTodos.filter((t) => !t.completed);
+          ? allTodos.filter((t) => t.isCompleted)
+          : allTodos.filter((t) => !t.isCompleted);
 
     setSheetData({
       visible: true,
@@ -164,99 +168,62 @@ export default function ProfileScreen({ route, navigation }: Props) {
     });
   };
 
-  return (
+ return (
     <ScreenWrapper>
-      <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-        <View style={[styles.ring, { borderColor: avatarColor + "30" }]} />
-        <View style={[styles.ringOuter, { borderColor: avatarColor + "15" }]} />
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        bounces={true}
+      >
+        {/* Hero Section */}
+        <View style={[styles.hero, { paddingTop: Platform.OS === 'ios' ? 20 : insets.top + 20 }]}>
+          <View style={[styles.ring, { borderColor: avatarColor + "30" }]} />
+          <View style={[styles.ringOuter, { borderColor: avatarColor + "15" }]} />
 
-        <Animated.View
-          style={[
-            styles.avatarWrapper,
-            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
-          ]}
-        >
-          <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <View
-            style={[
-              styles.onlineDot,
-              { borderColor: "#F9FAFB", backgroundColor: "#22C55E" },
-            ]}
-          />
-        </Animated.View>
-
-        <Animated.View
-          style={{ opacity: fadeAnim, alignItems: "center", marginTop: 16 }}
-        >
-          <Text style={styles.userName}>{user}</Text>
-          <View style={styles.badgeRow}>
-            <View
-              style={[styles.badge, { backgroundColor: avatarColor + "20" }]}
-            >
-              <Ionicons name="checkmark-circle" size={12} color={avatarColor} />
-              <Text style={[styles.badgeText, { color: avatarColor }]}>
-                %{stats.completionRate} tamamlandı
-              </Text>
+          <Animated.View style={[styles.avatarWrapper, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+            <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
+            <View style={[styles.onlineDot, { borderColor: "#F9FAFB", backgroundColor: "#22C55E" }]} />
+          </Animated.View>
+
+          <Animated.View style={{ opacity: fadeAnim, alignItems: "center", marginTop: 16 }}>
+            <Text style={styles.userName}>{user}</Text>
+            <View style={styles.badgeRow}>
+              <View style={[styles.badge, { backgroundColor: avatarColor + "20" }]}>
+                <Ionicons name="checkmark-circle" size={12} color={avatarColor} />
+                <Text style={[styles.badgeText, { color: avatarColor }]}>%{stats.completionRate} başarı</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+
+        <View style={styles.statsContainer}>
+          <StatCard icon="format-list-bulleted" value={stats.total} label="Toplam" color="#6366F1" delay={100} onPress={() => handleStatPress("total")} />
+          <StatCard icon="check-circle-outline" value={stats.completed} label="Bitti" color="#22C55E" delay={200} onPress={() => handleStatPress("completed")} />
+          <StatCard icon="clock-outline" value={stats.pending} label="Bekliyor" color="#F59E0B" delay={300} onPress={() => handleStatPress("pending")} />
+        </View>
+
+
+        <View style={styles.progressContainer}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressTitle}>Genel İlerleme</Text>
+            <Text style={styles.progressPercent}>%{stats.completionRate}</Text>
           </View>
-        </Animated.View>
-      </View>
-
-      <View style={styles.statsContainer}>
-        <StatCard
-          icon="format-list-bulleted"
-          value={stats.total}
-          label="Toplam"
-          color="#6366F1"
-          delay={100}
-          onPress={() => handleStatPress("total")}
-        />
-        <StatCard
-          icon="check-circle-outline"
-          value={stats.completed}
-          label="Tamamlanan"
-          color="#22C55E"
-          delay={400}
-          onPress={() => handleStatPress("completed")}
-        />
-        <StatCard
-          icon="clock-outline"
-          value={stats.pending}
-          label="Bekleyen"
-          color="#F59E0B"
-          delay={600}
-          onPress={() => handleStatPress("pending")}
-        />
-      </View>
-
-      <View style={styles.progressContainer}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Genel İlerleme</Text>
-          <Text style={styles.progressPercent}>%{stats.completionRate}</Text>
+          <View style={styles.progressBg}>
+            <View style={[styles.progressFill, { width: `${stats.completionRate}%` }]} />
+          </View>
         </View>
-        <View style={styles.progressBg}>
-          <Animated.View
-            style={[styles.progressFill, { width: `${stats.completionRate}%` }]}
-          />
-        </View>
-      </View>
 
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={styles.logoutButton}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons
-            name="exit-to-app"
-            size={20}
-            color="#EF4444"
-          />
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
-      </View>
+
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} activeOpacity={0.8}>
+            <MaterialCommunityIcons name="exit-to-app" size={20} color="#EF4444" />
+            <Text style={styles.logoutText}>Çıkış Yap</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
       <TodoBottomSheet
         visible={sheetData.visible}
         onClose={() => setSheetData((prev) => ({ ...prev, visible: false }))}
@@ -267,6 +234,17 @@ export default function ProfileScreen({ route, navigation }: Props) {
   );
 }
 const styles = StyleSheet.create({
+
+
+  scrollContent: {
+
+    flexGrow: 1, 
+    width: width,
+    paddingBottom: 40, 
+    paddingTop: 40,
+  },
+
+
   hero: {
     alignItems: "center",
     paddingBottom: 32,
@@ -435,7 +413,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: "#FEF2F2",
-    borderRadius: 35,
+    borderRadius: 18,
     paddingVertical: 16,
     borderWidth: 1,
     borderColor: "#FECACA",

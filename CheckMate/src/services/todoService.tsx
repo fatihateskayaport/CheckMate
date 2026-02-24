@@ -2,73 +2,82 @@ import { Todo } from "@/src/constants/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 
+
+const getTodoKey = (userName: string) => `${STORAGE_KEYS.TODO}_${userName}`;
+
 export const todoService = {
-  //TÜM TODOLARI GETİR-----------------------------
-  getAll: async (user: string): Promise<Todo[]> => {
-    const stored = await AsyncStorage.getItem(STORAGE_KEYS.TODO(user));
-    return stored ? JSON.parse(stored) : [];
+  // TÜM TODOLARI GETİR----------------------------
+  getAll: async (userName: string): Promise<Todo[]> => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(getTodoKey(userName));
+      return jsonValue != null ? JSON.parse(jsonValue) : [];
+    } catch (e) {
+      console.error("Todolar yüklenirken hata oluştu:", e);
+      return [];
+    }
   },
 
-  //TODO EKLE--------------------------------------
-  add: async (user: string, text: string): Promise<Todo[]> => {
+  // TODO EKLE----------------------------
+  add: async (userName: string, newTodo: Todo): Promise<void> => {
+    try {
+      const currentTodos = await todoService.getAll(userName);
+      const updatedTodos = [newTodo, ...currentTodos];
+      await AsyncStorage.setItem(getTodoKey(userName), JSON.stringify(updatedTodos));
+    } catch (e) {
+      console.error("Todo eklenirken hata oluştu:", e);
+    }
+  },
+
+  // TODO SİL (ID Bazlı)----------------------------
+delete: async (user: string, id: string): Promise<Todo[]> => {
+  try {
     const existing = await todoService.getAll(user);
-    const newTodo: Todo = {
-      text,
-      completed: false,
-      createdAt: Date.now(),
-    };
-    const updated = [newTodo, ...existing];
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.TODO(user),
-      JSON.stringify(updated),
-    );
+    const updated = existing.filter((item) => item.id !== id);
+    await AsyncStorage.setItem(getTodoKey(user), JSON.stringify(updated));
     return updated;
-  },
+  } catch (e) {
+    console.error("Silme işlemi sırasında hata:", e);
+    return [];
+  }
+},
+  // TODO TAMAMLA VEYA GERİ AL (ID Bazlı)----------------------------
+  toggle: async (user: string, id: string): Promise<Todo[]> => {
+    try {
+      const existing = await todoService.getAll(user);
+      
+      // 1. Durumu güncelle
+      const updatedStatus = existing.map((item) =>
+        item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
+      );
 
-  //TODO Sil---------------------------------------
-  delete: async (user: string, index: number): Promise<Todo[]> => {
-    const existing = await todoService.getAll(user);
-    const updated = existing.filter((_, i) => i !== index);
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.TODO(user),
-      JSON.stringify(updated),
-    );
-    return updated;
-  },
-
-  //TODO Tamamla veya Geri al----------------------
-  toggle: async (user: string, index: number): Promise<Todo[]> => {
-    const existing = await todoService.getAll(user);
-    const updated = existing
-      .map((item, i) =>
-        i === index ? { ...item, completed: !item.completed } : item,
-      )
-      .sort((a, b) => {
-        if (a.completed !== b.completed) {
-          return Number(a.completed) - Number(b.completed);
+      // 2. Sıralama: Tamamlanmayanlar (false) üstte, tamamlananlar (true) altta.
+      const sorted = updatedStatus.sort((a, b) => {
+        if (a.isCompleted !== b.isCompleted) {
+          return a.isCompleted ? 1 : -1;
         }
-        return b.createdAt - a.createdAt;
+        // İkisi de aynı durumdaysa tarihe göre yeniden eskiye
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.TODO(user),
-      JSON.stringify(updated),
-    );
-    return updated;
+
+      await AsyncStorage.setItem(getTodoKey(user), JSON.stringify(sorted));
+      return sorted;
+    } catch (e) {
+      console.error("Toggle hatası:", e);
+      return [];
+    }
   },
 };
 
-//Kullanıcı İşlemleri----------------------------
+// KULLANICI İŞLEMLERİ----------------------------
 export const userService = {
-  //Kullanıcı Adını Kaydet-----------------------
   save: async (username: string): Promise<void> => {
     await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
   },
-  //Kullanıcı Adını Getir-----------------------
   get: async (): Promise<string> => {
-    return (await AsyncStorage.getItem(STORAGE_KEYS.USERNAME)) ?? "Misafir";
+    const name = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
+    return name ?? "Misafir";
   },
-  //Kullanıcı Çıkış Yap-----------------------
   clear: async (): Promise<void> => {
-    await AsyncStorage.removeItem("USERNAME");
+    await AsyncStorage.removeItem(STORAGE_KEYS.USERNAME);
   },
 };

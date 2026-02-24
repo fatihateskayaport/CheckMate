@@ -1,73 +1,126 @@
 import CustomHeader from "@/src/components/CustomHeader";
-import CustomInput from "@/src/components/CustomInputText";
 import NiceButton from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
-import { centerContainer } from "@/src/constants/styles";
+import { STORAGE_KEYS } from "@/src/constants/storageKeys";
 import { Todo } from "@/src/constants/types";
+import CustomInput from "@/src/pages/add/components/CustomInputText";
+import { todoService } from "@/src/services/todoService";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
+import Toast from "react-native-toast-message";
+import CustomInputDetail from "./components/CustomDetailInputText ";
+import FormDatePicker from "./components/FormDatePicker";
+import PrioritySelector from "./components/PrioritySelector";
+
 
 export default function AddScreen() {
-  const [userName, setUserName] =
-    useState<string>(""); /* route.params?.user ?? "Misafir" */
+  const [userName, setUserName] = useState<string>("");
   const [todo, setTodo] = useState("");
-
-  const STORAGE_KEY = "USERNAME";
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<Todo['priority']>('Medium');
+  const [deadline, setDeadline] = useState(new Date());
+  const navigation = useNavigation();
+  
+  const { width } = Dimensions.get("window");
+  const COMPONENT_WIDTH = width * 0.82; 
 
   const getUserName = async () => {
-    const name = await AsyncStorage.getItem(STORAGE_KEY);
-    setUserName(name ?? "");
+    const name = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
+    setUserName(name ?? "Misafir");
   };
 
-  useEffect(() => {
-    getUserName();
-  }, []);
+  useEffect(() => { getUserName(); }, []);
 
   const addTodo = async () => {
-    if (!todo.trim()) return;
-
-    const userName = (await AsyncStorage.getItem("USERNAME")) ?? "Misafir";
-    const TODO_KEY = `TODO_${userName}`;
-
-    const stored = await AsyncStorage.getItem(TODO_KEY);
-    const existing: Todo[] = stored ? JSON.parse(stored) : [];
+    if (!todo.trim()){
+      Toast.show({
+              type: 'error',
+              text1: 'Hata',
+              text2: 'Lütfen bir görev başlığı girin ⚠️'
+            });
+      return;
+    } 
 
     const newTodo: Todo = {
-      text: todo,
-      completed: false,
-      createdAt: Date.now(),
+      id: Date.now().toString(), 
+      title: todo,
+      description: description,
+      priority: priority,
+      deadline: deadline.toISOString(),
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
     };
 
-    const updated = [newTodo, ...existing];
-    await AsyncStorage.setItem(TODO_KEY, JSON.stringify(updated));
+    await todoService.add(userName, newTodo);
+
+    Toast.show({
+      type: 'success',
+      text1: 'Başarılı! ✨',
+      text2: 'Görevin listeye eklendi.',
+      position: 'top',
+      visibilityTime: 3000,
+    });
+    
     setTodo("");
+    setDescription("");
+    setPriority('Medium');
+    setDeadline(new Date());
+
+    
+      navigation.goBack();
+    ;
   };
+
   return (
     <ScreenWrapper>
-      <View style={centerContainer}>
-        <CustomHeader
-          text="Yeni To-Do Ekle"
-          user={userName}
-          showLogout={false}
-        />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <CustomHeader text="Yeni Görev" user={userName} showLogout={false} />
 
-        <CustomInput
-          placeholder="Yeni To-Do"
-          value={todo}
-          onChangeText={setTodo}
-          maxLength={50}
-          error={todo.length > 50 ? "Todo çok uzun!" : undefined}
-        />
-        <NiceButton title="Ekle" status="default" onPress={addTodo} />
-      </View>
+        <View style={{ width: COMPONENT_WIDTH, gap: 10 }}>
+          <CustomInput 
+            placeholder="Görev Başlığı" 
+            value={todo} 
+            onChangeText={setTodo} 
+            maxLength={20}
+          />
+          
+          <CustomInputDetail 
+            placeholder="Açıklama" 
+            value={description} 
+            onChangeText={setDescription}  
+          />
+
+          <PrioritySelector selected={priority} onSelect={setPriority} />
+
+          <FormDatePicker date={deadline} onDateChange={setDeadline}/>
+        </View>
+
+        <View style={[styles.buttonContainer, { width: COMPONENT_WIDTH }]}>
+          <NiceButton title="Görevi Kaydet" status="default" onPress={addTodo} />
+        </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  text: { fontSize: 18, fontWeight: "600", color: "#6366F1" },
+  scrollContent: {
+    flexGrow: 1, 
+    alignItems: 'center',
+    paddingBottom: 40, 
+    paddingTop: 10,
+  },
+  buttonContainer: {
+    marginTop: 25, 
+    marginBottom: 20
+  }
 });

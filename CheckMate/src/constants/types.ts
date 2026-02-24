@@ -1,5 +1,9 @@
 export type Todo = {
-  text: string;
-  completed: boolean;
-  createdAt: number;
+  id: string;
+  title: string;
+  description?: string;
+  priority: 'Low' | 'Medium' | 'High'
+  deadline: string;
+  isCompleted: boolean;
+  createdAt: string;
 };

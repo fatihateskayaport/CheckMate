@@ -1,15 +1,14 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "@/App";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import CustomHeader from "@/src/components/CustomHeader";
-import TodoList from "@/src/components/TodoList";
-import { todoService, userService } from "@/src/services/todoService";
+import TodoList from "@/src/pages/home/components/TodoList";
+import { todoService } from "@/src/services/todoService";
 import { useFocusEffect } from "@react-navigation/native";
 import { Todo } from "../../constants/types";
 
@@ -18,32 +17,27 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 export default function Home({ navigation, route }: Props) {
   const user = route.params?.user ?? "Misafir";
   const [todoList, setTodoList] = useState<Todo[]>([]);
-  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
       todoService.getAll(user).then(setTodoList);
     }, [user]),
   );
-  const deleteTodo = async (index: number) => {
-    const updated = await todoService.delete(user, index);
+  const deleteTodo = async (id: string) => {
+    const updated = await todoService.delete(user, id);
     setTodoList(updated);
   };
 
-  const toggleTodo = async (index: number) => {
-    const updated = await todoService.toggle(user, index);
+  const toggleTodo = async (id: string) => {
+    const updated = await todoService.toggle(user, id);
     setTodoList(updated);
   };
 
-  const handleLogout = async () => {
-    await userService.clear();
-    navigation.replace("Login", { logout: true });
-  };
 
   return (
     <ScreenWrapper>
       <View style={{}}>
-        <CustomHeader user={user} onLogout={handleLogout} />
+        <CustomHeader user={user}  showLogout={false}/>
       </View>
       <View style={{ flex: 1, width: "100%" }}>
         <GestureHandlerRootView style={{ flex: 1 }}>
