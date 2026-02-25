@@ -1,4 +1,4 @@
-import { NavigationContainer } from "@react-navigation/native";
+import { createNavigationContainerRef, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as React from "react";
 import Toast from 'react-native-toast-message';
@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import CustomTabBar from "./src/components/CustomTabBar";
+import NoInternetOverlay from "./src/components/NoInternetOverlay";
 import { toastConfig } from "./src/config/toastConfig";
 import AddScreen from "./src/pages/add/AddScreen";
 import Home from "./src/pages/home/home";
@@ -25,6 +26,7 @@ export type RootStackParamList = {
 };
 
 const HomeWrapper = (props: any) => <Home {...props} />;
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 function MainTabs({ route }: any) {
   const user = route.params?.user;
@@ -63,6 +65,7 @@ export default function App() {
             <Stack.Screen name="Home" component={MainTabs} />
           </Stack.Navigator>
           <Toast config={toastConfig}/>
+          <NoInternetOverlay />
         </NavigationContainer>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

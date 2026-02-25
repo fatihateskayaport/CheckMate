@@ -133,5 +133,5 @@ const styles = StyleSheet.create({
   completedText: { color: "#9CA3AF", textDecorationLine: "line-through" },
   rightInfo: { alignItems: 'flex-end', gap: 6 },
   dateText: { fontSize: 10, color: "#9CA3AF", fontWeight: "600" },
-  priorityDot: { width: 6, height: 6, borderRadius: 3 }
+  priorityDot: { width: 30, height: 6, borderRadius: 3 }
 });
