@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import CustomTabBar from "./src/components/CustomTabBar";
 import NoInternetOverlay from "./src/components/NoInternetOverlay";
@@ -19,6 +20,18 @@ import ProfileScreen from "./src/pages/profile/ProfileScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
+
+// 1. Bir istemci (client) oluşturuyoruz
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Veri çekme hatalarında kullanıcıya çaktırmadan 2 kez daha dene
+      retry: 2, 
+      // Çekilen veri 5 dakika boyunca "taze" sayılsın (gereksiz yere tekrar çekmesin)
+      staleTime: 1000 * 60 * 5, 
+    },
+  },
+});
 
 export type RootStackParamList = {
   Login: { logout?: boolean } | undefined;
@@ -53,6 +66,7 @@ function MainTabs({ route }: any) {
 
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <NavigationContainer>
@@ -69,6 +83,7 @@ export default function App() {
         </NavigationContainer>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }
 

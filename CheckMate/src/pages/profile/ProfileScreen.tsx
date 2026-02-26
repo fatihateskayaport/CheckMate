@@ -1,6 +1,6 @@
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import TodoBottomSheet from "@/src/pages/profile/components/TodoBottomSheet";
-import { todoService, userService } from "@/src/services/todoService";
+import { useTodoStore } from "@/src/services/useTodoStore";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useRef, useState } from "react";
@@ -79,66 +79,51 @@ const StatCard = ({
   );
 };
 
-export default function ProfileScreen({ route, navigation }: Props) {
-  const user = route?.params?.user ?? "Misafir";
+export default function ProfileScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const [stats, setStats] = useState({
-    total: 0,
-    completed: 0,
-    pending: 0,
-    completionRate: 0,
-  });
+
+  const allTodos = useTodoStore((state) => state.todos);
+
+  const user = useTodoStore((state) => state.username);
+
+  const setUsername = useTodoStore((state) => state.setUsername); // gerek yok ama ekleyek
+
+  const clearTodos = useTodoStore((state) => state.clearTodos); // gerek yok ama ekleyek
+
+  const completedCount = allTodos.filter((t) => t.isCompleted).length;
+
+  const totalCount = allTodos.length;
+
+  const pendingCount = totalCount - completedCount;
+
+  const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+
+
+  const stats = {
+    total: totalCount,
+    completed: completedCount,
+    pending: pendingCount,
+    completionRate: completionRate,
+  };
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
-  const avatarColor =
-    AVATAR_COLORS[
-      user
-        .split("")
-        .reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) %
-        AVATAR_COLORS.length
-    ];
-
-  const initials = user
-    .split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  const [allTodos, setAllTodos] = useState<Todo[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          damping: 12,
-          stiffness: 150,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, damping: 12, stiffness: 150, useNativeDriver: true }),
       ]).start();
 
-      todoService.getAll(user).then((todos) => {
-        setAllTodos(todos);
-        const completed = todos.filter((t) => t.isCompleted).length;
-        const total = todos.length;
-        const pending = total - completed;
-        const completionRate =
-          total > 0 ? Math.round((completed / total) * 100) : 0;
-        setStats({ total, completed, pending, completionRate });
-      });
-    }, [user]),
+    }, [fadeAnim, scaleAnim])
   );
 
+
   const handleLogout = async () => {
-    await userService.clear();
+    setUsername("Misafir");
     navigation?.replace("Login", { logout: true });
   };
 
@@ -168,9 +153,25 @@ export default function ProfileScreen({ route, navigation }: Props) {
     });
   };
 
- return (
+  const avatarColor =
+    AVATAR_COLORS[
+    user
+      .split("")
+      .reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) %
+    AVATAR_COLORS.length
+    ];
+
+  const initials = user
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+
+  return (
     <ScreenWrapper>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         bounces={true}
@@ -235,12 +236,11 @@ export default function ProfileScreen({ route, navigation }: Props) {
 }
 const styles = StyleSheet.create({
 
-
   scrollContent: {
 
-    flexGrow: 1, 
+    flexGrow: 1,
     width: width,
-    paddingBottom: 40, 
+    paddingBottom: 40,
     paddingTop: 40,
   },
 

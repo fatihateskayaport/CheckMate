@@ -34,7 +34,7 @@ const TodoItem = ({ item, onToggle }: Props) => {
       damping: 15,
       stiffness: 150,
     }).start();
-  }, [item.isCompleted]);
+  }, [checkAnim, item.isCompleted]);
 
   const handleToggle = () => {
     Animated.sequence([

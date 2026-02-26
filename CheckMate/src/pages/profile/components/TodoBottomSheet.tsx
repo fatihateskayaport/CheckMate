@@ -56,21 +56,21 @@ const TodoBottomSheet = ({
 
   const renderItem = ({ item }: { item: Todo }) => (
     <View style={styles.todoItem}>
-      <View style={[styles.checkbox, item.completed && styles.checkboxDone]}>
-        {item.completed && (
+      <View style={[styles.checkbox, item.isCompleted && styles.checkboxDone]}>
+        {item.isCompleted && (
           <MaterialCommunityIcons name="check" size={14} color="#fff" />
         )}
       </View>
       <View style={styles.todoContent}>
         <Text
-          style={[styles.todoText, item.completed && styles.todoTextDone]}
+          style={[styles.todoText, item.isCompleted && styles.todoTextDone]}
           numberOfLines={2}
         >
-          {item.text}
+          {item.title}
         </Text>
         <Text style={styles.todoDate}>{formatDate(item.createdAt)}</Text>
       </View>
-      {item.completed && (
+      {item.isCompleted && (
         <View style={styles.completedBadge}>
           <Text style={styles.completedBadgeText}>Tamamlandı</Text>
         </View>

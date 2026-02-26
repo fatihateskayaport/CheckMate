@@ -1,16 +1,14 @@
 import CustomHeader from "@/src/components/CustomHeader";
 import NiceButton from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
-import { STORAGE_KEYS } from "@/src/constants/storageKeys";
 import { Todo } from "@/src/constants/types";
 import CustomInput from "@/src/pages/add/components/CustomInputText";
-import { todoService } from "@/src/services/todoService";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
+
+import { useTodoStore } from "@/src/services/useTodoStore";
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 import CustomInputDetail from "./components/CustomDetailInputText ";
@@ -19,25 +17,20 @@ import PrioritySelector from "./components/PrioritySelector";
 
 
 export default function AddScreen() {
-  const [userName, setUserName] = useState<string>("");
-  const [todo, setTodo] = useState("");
+const username = useTodoStore((state) => state.username);
+  const addTodoInStore = useTodoStore((state) => state.addTodo);
+
+  const [todoTitle, setTodoTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Todo['priority']>('Medium');
   const [deadline, setDeadline] = useState(new Date());
-  const navigation = useNavigation();
   
+  const navigation = useNavigation();
   const { width } = Dimensions.get("window");
-  const COMPONENT_WIDTH = width * 0.82; 
-
-  const getUserName = async () => {
-    const name = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
-    setUserName(name ?? "Misafir");
-  };
-
-  useEffect(() => { getUserName(); }, []);
+  const COMPONENT_WIDTH = width * 0.82;
 
   const addTodo = async () => {
-    if (!todo.trim()){
+    if (!todoTitle.trim()){
       Toast.show({
               type: 'error',
               text1: 'Hata',
@@ -46,17 +39,12 @@ export default function AddScreen() {
       return;
     } 
 
-    const newTodo: Todo = {
-      id: Date.now().toString(), 
-      title: todo,
-      description: description,
-      priority: priority,
-      deadline: deadline.toISOString(),
-      isCompleted: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    await todoService.add(userName, newTodo);
+    addTodoInStore(
+      todoTitle, 
+      priority, 
+      deadline.toISOString(), 
+      description
+    );
 
     Toast.show({
       type: 'success',
@@ -65,13 +53,7 @@ export default function AddScreen() {
       position: 'top',
       visibilityTime: 3000,
     });
-    
-    setTodo("");
-    setDescription("");
-    setPriority('Medium');
-    setDeadline(new Date());
-
-    
+        
       navigation.goBack();
     ;
   };
@@ -83,13 +65,13 @@ export default function AddScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <CustomHeader text="Yeni Görev" user={userName} showLogout={false} />
+        <CustomHeader text="Yeni Görev" user={username} showLogout={false} />
 
         <View style={{ width: COMPONENT_WIDTH, gap: 10 }}>
           <CustomInput 
             placeholder="Görev Başlığı" 
-            value={todo} 
-            onChangeText={setTodo} 
+            value={todoTitle} 
+            onChangeText={setTodoTitle} 
             maxLength={20}
           />
           
