@@ -1,3 +1,4 @@
+import { theme } from "@/src/constants";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -76,22 +77,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputWrapper: {
-    width: Dimensions.get("screen").width * 0.8,
-    position: "relative",
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 15,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
+      width: Dimensions.get("screen").width * 0.88,
+      position: "relative",
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 16,
+      borderColor: "#ccc",
+      borderRadius: theme.layout.borderRadius.lg,
+      backgroundColor: theme.colors.white,
+      paddingHorizontal: 20,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
   input: {
     flex: 1,
     fontSize: 16,

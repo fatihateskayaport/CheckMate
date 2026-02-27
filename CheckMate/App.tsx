@@ -36,6 +36,7 @@ const queryClient = new QueryClient({
 export type RootStackParamList = {
   Login: { logout?: boolean } | undefined;
   Home: { user?: string };
+  Add: { user?: string }| undefined;
 };
 
 const HomeWrapper = (props: any) => <Home {...props} />;
@@ -77,6 +78,9 @@ export default function App() {
             <Stack.Screen name="Login" component={Login} />
             
             <Stack.Screen name="Home" component={MainTabs} />
+            <Stack.Screen name="Add" component={AddScreen} />
+
+            
           </Stack.Navigator>
           <Toast config={toastConfig}/>
           <NoInternetOverlay />

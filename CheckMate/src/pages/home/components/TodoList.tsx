@@ -1,26 +1,26 @@
-import { Todo } from "@/src/constants/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useCallback, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   FlatList,
   ListRenderItemInfo,
+  Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+import { RectButton, Swipeable } from "react-native-gesture-handler";
+
+import { theme } from "@/src/constants";
+import { Todo } from "@/src/constants/types";
+
+import { layout } from "@/src/constants/layout";
 import TodoItem from "./TodoItem";
-
-
-const { width } = Dimensions.get("window");
 
 type Props = {
   todos: Todo[];
   onToggle: (id: string) => void;
-  onDelete: (iid: string) => void;
+  onDelete: (id: string) => void;
 };
 
 const RenderRightActions = ({
@@ -30,57 +30,59 @@ const RenderRightActions = ({
   progress: Animated.AnimatedInterpolation<number | string>;
   onDelete: () => void;
 }) => {
+
   const translateX = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [80, 0],
   });
-  
+
   return (
     <View style={styles.deleteWrapper}>
       <Animated.View style={[styles.deleteAction, { transform: [{ translateX }] }]}>
-        <TouchableOpacity
+        <RectButton
           onPress={onDelete}
           style={styles.deleteButton}
-          activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={24} color="#fff" />
-        </TouchableOpacity>
+          <MaterialCommunityIcons name="trash-can-outline" size={24} color={theme.colors.white} />
+        </RectButton>
       </Animated.View>
     </View>
   );
 };
 
 const TodoList = ({ todos, onToggle, onDelete }: Props) => {
-  const swipeableRefs = useRef<Map<number, Swipeable | null>>(new Map());
-  const currentlyOpenRef = useRef<number | null>(null);
+  const swipeableRefs = useRef<Map<string, Swipeable | null>>(new Map());
 
-  const handleSwipeOpen = useCallback((index: number) => {
-    if (currentlyOpenRef.current !== null && currentlyOpenRef.current !== index) {
-      swipeableRefs.current.get(currentlyOpenRef.current)?.close();
-    }
-    currentlyOpenRef.current = index;
+  const closeOtherSwipeables = useCallback((currentId: string) => {
+    swipeableRefs.current.forEach((ref, id) => {
+      if (id !== currentId) ref?.close();
+    });
   }, []);
 
- const renderItem = useCallback(
+  const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Todo>) => (
       <Swipeable
-   
+        ref={(ref) => {
+          if (ref) swipeableRefs.current.set(item.id, ref);
+          else swipeableRefs.current.delete(item.id);
+        }}
+        onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
+        friction={2}
+        rightThreshold={40}
         renderRightActions={(progress) => (
           <RenderRightActions
             progress={progress}
-            onDelete={() => onDelete(item.id)} 
+            onDelete={() => onDelete(item.id)}
           />
         )}
       >
-        <TodoItem
-          item={item}
-          onToggle={onToggle} 
-          createdAt={item.createdAt}
-        />
+        <TodoItem item={item} onToggle={onToggle} />
       </Swipeable>
     ),
-    [onToggle, onDelete]
+    [onToggle, onDelete, closeOtherSwipeables]
   );
+
+  // Boş durum yönetimi (Empty State)
   if (todos.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -88,11 +90,13 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
           <MaterialCommunityIcons
             name="clipboard-text-outline"
             size={40}
-            color="#6366F1"
+            color={theme.colors.primary}
           />
         </View>
         <Text style={styles.emptyTitle}>Henüz Görev Yok</Text>
-        <Text style={styles.emptySubtitle}>Planlarını buraya ekleyerek başlayabilirsin.</Text>
+        <Text style={styles.emptySubtitle}>
+          Planlarını buraya ekleyerek üretkenliğini artırabilirsin.
+        </Text>
       </View>
     );
   }
@@ -100,11 +104,13 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
   return (
     <FlatList
       data={todos}
-      keyExtractor={(item) => item.id || Math.random().toString()}
+      keyExtractor={(item) => item.id}
       renderItem={renderItem}
       contentContainerStyle={styles.listContent}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
       showsVerticalScrollIndicator={false}
+      removeClippedSubviews={Platform.OS === 'android'}
+      maxToRenderPerBatch={10}
+      windowSize={5}
     />
   );
 };
@@ -112,31 +118,29 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
 export default TodoList;
 
 const styles = StyleSheet.create({
-  listContent: { 
-    paddingVertical: 12, 
-    paddingHorizontal: 20,
-    flexGrow: 1 
-  },
-  separator: { 
-    height: 12 
+  listContent: {
+    paddingVertical: theme.layout.spacing.md,
+
+    flexGrow: 1,
   },
   deleteWrapper: {
-    width: 80,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    width: 90,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 4, 
   },
   deleteAction: {
-    height: '90%', // TodoItem kart yüksekliğiyle uyumlu
+    height: '100%',
     width: 70,
-    backgroundColor: "#FEF2F2", // Hafif kırmızı arka plan
-    borderRadius: 16,
+    backgroundColor: theme.colors.danger,
+    borderRadius: theme.layout.borderRadius.md,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
+    ...Platform.select({
+      ios: { shadowColor: theme.colors.danger, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4 },
+      android: { elevation: 4 }
+    })
   },
   deleteButton: {
-    backgroundColor: "#EF4444",
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -145,28 +149,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 100,
     width: '100%',
+    paddingBottom: 100,
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
+    width: layout.window.width,
+    height: layout.window.height,
     borderRadius: 40,
-    backgroundColor: '#F5F5FF',
+    backgroundColor: theme.colors.primary + "10",
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: theme.layout.spacing.md,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1F2937",
+    fontSize: theme.typography.sizes.lg,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.textPrimary,
   },
-  emptySubtitle: { 
-    fontSize: 14, 
-    color: "#6B7280", 
+  emptySubtitle: {
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: 4,
-    paddingHorizontal: 40
+    paddingHorizontal: theme.layout.spacing.xl,
   },
 });

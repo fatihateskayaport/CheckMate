@@ -1,0 +1,17 @@
+ export const colors = {
+  primary: "#6C63FF",
+  secondary: "#FF6584",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  danger: "#EF4444",
+  background: "#F9FAFB",
+  white: "#FFFFFF",
+  black: "#000000",
+  textPrimary: "#111827",
+  textSecondary: "#6B7280",
+  border: "#F0F0F0",
+  shadow: "rgba(99, 102, 241, 0.08)",
+  highRisk:"red",
+  mediumRisk:"orange",
+  lowRisk: "green",
+};
