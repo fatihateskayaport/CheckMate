@@ -25,7 +25,7 @@ const ScreenWrapper = ({ children, style }: Props) => {
         }),
       ]),
     ).start();
-  }, []);
+  }, [anim]);
 
   const translateX = anim.interpolate({
     inputRange: [0, 1],

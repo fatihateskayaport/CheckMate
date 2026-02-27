@@ -73,6 +73,7 @@ export default function AddScreen() {
 
   return (
     <ScreenWrapper>
+      <CustomHeader user={username} title="Yeni Görev" isHome={true}/>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex1}
@@ -82,7 +83,7 @@ export default function AddScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <CustomHeader text="Yeni Görev" user={username} showLogout={false} />
+          
 
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>

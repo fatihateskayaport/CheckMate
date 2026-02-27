@@ -1,217 +1,117 @@
-import React, { useEffect, useRef } from "react";
-
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { theme } from "@/src/constants";
+import { useTodoStore } from "@/src/services/useTodoStore";
+import { useNavigation } from "@react-navigation/native";
+import React, { useMemo } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type CustomHeaderProps = {
-  user?: string;
-  onLogout?: () => void;
-  text?: string;
-  showLogout?: boolean;
-  showAvatar?: boolean;
+type Props = {
+  user: string;
+  title?: string; 
+  isHome?: boolean; 
 };
 
-const CustomHeader = ({
-  user = "Misafir",
-  onLogout,
-  text,
-  showLogout = true,
-  showAvatar = true,
-}: CustomHeaderProps) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-8)).current;
+export default function CustomHeader({ user, title, isHome = true }: Props) {
+  const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const userImage = useTodoStore((state) => state.userImage);
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const initials = user
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  const colors = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
-  const colorIndex =
-    user.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-    colors.length;
-  const avatarColor = colors[colorIndex];
+  const userDesign = useMemo(() => {
+    const initials = user.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    const colors = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
+    const colorIndex = user.length % colors.length;
+    return { initials, color: colors[colorIndex] };
+  }, [user]);
 
   return (
-    <Animated.View
-      style={[
-        styles.header,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-          paddingTop: insets.top,
-        },
-      ]}
-    >
-      {showLogout && (
-        <TouchableOpacity
-          onPress={onLogout}
-          style={styles.iconButton}
-          activeOpacity={0.7}
-        >
-          <View style={styles.iconBg}>
-            <MaterialCommunityIcons
-              name="exit-to-app"
-              size={20}
-              color="#6B7280"
-            />
-          </View>
-        </TouchableOpacity>
-      )}
+    <View style={[
+      styles.container, 
+      { paddingTop: insets.top + 10 } 
+    ]}>
 
-      <View style={styles.center} pointerEvents="none">
-        {text ? (
-          <Text style={styles.username}>{text}</Text>
+      <View style={styles.leftSection}>
+        {!isHome && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={{ fontSize: 24 }}>←</Text> 
+          </TouchableOpacity>
+        )}
+        
+        {isHome ? (
+          <View>
+            <Text style={styles.welcomeText}>Merhaba 👋</Text>
+            <Text style={styles.userName} numberOfLines={1}>{user}</Text>
+          </View>
         ) : (
-          <>
-            <Text style={styles.greeting}>Merhaba 👋</Text>
-            <Text
-              style={styles.username}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {user}
-            </Text>
-          </>
+          <Text style={styles.pageTitle}>{title}</Text>
         )}
       </View>
-      {showAvatar && (
-        <View style={styles.avatarWrapper}>
-          <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <View style={[styles.onlineDot, { borderColor: "#F9FAFB" }]} />
+
+      <TouchableOpacity 
+        onPress={() => navigation.navigate("Profile")} 
+        activeOpacity={0.7}
+      >
+        <View style={[styles.avatarFrame, { borderColor: userImage ? theme.colors.primary : "white" }]}>
+          {userImage ? (
+            <Image source={{ uri: userImage }} style={styles.avatarImage} />
+          ) : (
+            <View style={[styles.initialsCircle, { backgroundColor: userDesign.color }]}>
+              <Text style={styles.initialsText}>{userDesign.initials}</Text>
+            </View>
+          )}
         </View>
-      )}
-      <View style={styles.bottomLine} />
-    </Animated.View>
+      </TouchableOpacity>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  header: {
-    width: "100%",
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  leftSection: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundBlendMode: "#111827",
-    paddingHorizontal: 16,
-    position: "relative",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    gap: 12,
   },
-
-  iconButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 8,
-  },
-  greeting: {
-    fontSize: 11,
+  welcomeText: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
     fontWeight: "500",
-    color: "#9CA3AF",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    lineHeight: 14,
   },
-  username: {
-    fontSize: 16,
+  userName: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: theme.colors.textPrimary,
+  },
+  pageTitle: {
+    fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
-    letterSpacing: -0.2,
-    lineHeight: 20,
-    maxWidth: 180,
+    color: theme.colors.textPrimary,
   },
-
-  avatarWrapper: {
-    position: "relative",
+  backButton: {
+    paddingRight: 8,
+  },
+  avatarFrame: {
+    width: 48,
+    height: 48,
+    borderRadius: 22,
+    borderWidth: 2,
+    backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
+    overflow: "hidden",
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderColor: theme.colors.primary,
   },
-  avatarText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-    fontSize: 14,
-    letterSpacing: 0.5,
-  },
-  onlineDot: {
-    position: "absolute",
-    bottom: -1,
-    right: -1,
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: "#22C55E",
-    borderWidth: 2,
-  },
-  bottomLine: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "#E5E7EB",
-  },
+  avatarImage: { width: "100%", height: "100%" },
+  initialsCircle: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
+  initialsText: { color: "white", fontSize: 16, fontWeight: "bold" },
 });
-
-export default CustomHeader;

@@ -106,7 +106,7 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
       data={todos}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, {paddingBottom: 100}]}
       showsVerticalScrollIndicator={false}
       removeClippedSubviews={Platform.OS === 'android'}
       maxToRenderPerBatch={10}

@@ -5,11 +5,12 @@ import TodoBottomSheet from "@/src/pages/profile/components/TodoBottomSheet";
 import { useTodoStore } from "@/src/services/useTodoStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
-  Dimensions,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -18,10 +19,6 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-
-
-const { width } = Dimensions.get("window");
 
 const AVATAR_COLORS = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
 
@@ -37,7 +34,7 @@ const StatCard = ({ icon, value, label, color, delay, onPress }: any) => {
         Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
         Animated.timing(slideAnim, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
       ]).start();
-    }, [delay])
+    }, [delay, fadeAnim, slideAnim])
   );
 
   return (
@@ -55,7 +52,7 @@ const StatCard = ({ icon, value, label, color, delay, onPress }: any) => {
 
 export default function ProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { todos, username, setUsername } = useTodoStore();
+  const { todos, username, setUsername, userImage, setUserImage } = useTodoStore();
 
   const handleLogout = () => {
     Alert.alert(
@@ -73,6 +70,58 @@ export default function ProfileScreen({ navigation }: any) {
         },
       ]
     );
+  };
+
+  const handleImageAction = () => {
+    const buttons = [
+      { text: "Kamera ile Çek", onPress: takePhoto },
+      { text: "Galeriden Seç", onPress: pickImage },
+      userImage ? { text: "Fotoğrafı Kaldır", onPress: () => setUserImage(null), style: 'destructive' as const } : null,
+      { text: "Vazgeç", style: "cancel" as const },
+    ];
+    const filteredButtons = buttons.filter((btn): btn is any => btn !== null);
+    Alert.alert(
+      "Profil Fotoğrafı",
+      "Bir seçenek belirleyin",
+      filteredButtons
+    );
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("İzin Gerekli", "Galeriye erişmek için izin vermelisiniz.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setUserImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("İzin Gerekli", "Kamera kullanımı için izin vermelisiniz.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setUserImage(result.assets[0].uri);
+    }
   };
 
   const stats = useMemo(() => {
@@ -102,7 +151,7 @@ export default function ProfileScreen({ navigation }: any) {
         Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
         Animated.spring(scaleAnim, { toValue: 1, damping: 12, stiffness: 150, useNativeDriver: true }),
       ]).start();
-    }, [])
+    }, [fadeAnim, scaleAnim])
   );
 
   return (
@@ -111,11 +160,25 @@ export default function ProfileScreen({ navigation }: any) {
 
         <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
           <View style={[styles.ring, { borderColor: userDesign.color + "25" }]} />
-          <Animated.View style={[styles.avatarWrapper, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-            <View style={[styles.avatar, { backgroundColor: userDesign.color }]}>
-              <Text style={styles.avatarText}>{userDesign.initials}</Text>
-            </View>
-          </Animated.View>
+
+          <TouchableOpacity onPress={handleImageAction} activeOpacity={0.9}>
+            <Animated.View style={[styles.avatarWrapper, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+
+              <View style={[styles.avatar, { backgroundColor: userImage ? 'transparent' : userDesign.color }]}>
+                {userImage ? (
+                  <Image source={{ uri: userImage }} style={styles.profileImage} />
+                ) : (
+                  <Text style={styles.avatarText}>{userDesign.initials}</Text>
+                )}
+              </View>
+
+              <View style={[styles.cameraBadge, { backgroundColor: theme.colors.primary }]}>
+                <MaterialCommunityIcons name="camera" size={14} color="white" />
+              </View>
+
+            </Animated.View>
+          </TouchableOpacity>
+
           <Text style={styles.userName}>{username}</Text>
           <View style={[styles.badge, { backgroundColor: userDesign.color + "15" }]}>
             <Text style={{ color: userDesign.color, fontWeight: "bold" }}>%{stats.rate} Başarı</Text>
@@ -129,28 +192,16 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         <View style={styles.logoutContainer}>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={styles.logoutBtn}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.7}>
             <View style={styles.logoutContent}>
               <MaterialCommunityIcons name="logout-variant" size={22} color={theme.colors.danger} />
               <Text style={styles.logoutText}>Oturumu Kapat</Text>
             </View>
           </TouchableOpacity>
-
-          <Text style={{
-            textAlign: 'center',
-            marginTop: 20,
-            color: theme.colors.textSecondary,
-            fontSize: theme.typography.sizes.xs,
-            opacity: 0.5
-          }}>
-            Versiyon 0.0.8
-          </Text>
+          <Text style={styles.versionText}>Versiyon 0.1.1</Text>
         </View>
       </ScrollView>
+
       <TodoBottomSheet
         visible={sheetData.visible}
         onClose={() => setSheetData(p => ({ ...p, visible: false }))}
@@ -164,16 +215,38 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   hero: { alignItems: "center", marginBottom: 30 },
-  ring: { position: 'absolute', width: 200, height: 200, borderRadius: 100, borderWidth: 1, top: 10 },
-  avatarWrapper: { marginBottom: 15 },
+  ring: { position: 'absolute', width: 220, height: 220, borderRadius: 110, borderWidth: 1, top: 0 },
+  avatarWrapper: { marginBottom: 15, position: "relative" },
   avatar: {
-    width: width * 0.25,
-    height: width * 0.25,
+    width: 100,
+    height: 100,
     borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 4,
     borderColor: "white",
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+      android: { elevation: 4 }
+    })
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    zIndex: 10,
+    borderColor: 'white',
   },
   avatarText: { color: "white", fontSize: 32, fontWeight: "bold" },
   userName: { fontSize: 22, fontWeight: "bold", color: "#333" },
@@ -202,14 +275,7 @@ const styles = StyleSheet.create({
       android: { elevation: 2 }
     })
   },
-  logoutContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.layout.spacing.sm,
-  },
-  logoutText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.danger,
-  },
+  logoutContent: { flexDirection: "row", alignItems: "center", gap: theme.layout.spacing.sm },
+  logoutText: { fontSize: theme.typography.sizes.md, fontWeight: theme.typography.weights.semibold, color: theme.colors.danger },
+  versionText: { textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary, fontSize: 10, opacity: 0.5 }
 });

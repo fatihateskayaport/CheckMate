@@ -6,8 +6,9 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 interface TodoState {
   todos: Todo[];
   username: string;
+  userImage: string | null;
   setUsername: (name: string) => void;
-  // Parametreleri senin tipine (title, description, priority, deadline) göre güncelledik
+  setUserImage: (uri: string | null) => void;
   addTodo: (title: string, priority: 'Low' | 'Medium' | 'High', deadline: string, description?: string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
@@ -19,8 +20,10 @@ export const useTodoStore = create<TodoState>()(
     (set, get) => ({
       todos: [],
       username: 'Misafir',
+      userImage: null,
 
       setUsername: (name: string) => set({ username: name }),
+      setUserImage: (uri) => set({ userImage: uri }),
 
       addTodo: (title, priority, deadline, description) => {
         const newTodo: Todo = {
@@ -44,7 +47,7 @@ export const useTodoStore = create<TodoState>()(
           todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
         );
 
-        // Sıralama: Tamamlanmayanlar üstte, tarihine göre yeni olan en üstte
+        // Sıralama mantığı: Tamamlanmayanlar her zaman üstte
         const sorted = updated.sort((a, b) => {
           if (a.isCompleted !== b.isCompleted) {
             return a.isCompleted ? 1 : -1;
@@ -64,7 +67,7 @@ export const useTodoStore = create<TodoState>()(
       clearTodos: () => set({ todos: [] }),
     }),
     {
-      name: 'checkmate-storage',
+      name: 'checkmate-storage', 
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
