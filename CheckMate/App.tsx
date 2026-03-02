@@ -20,12 +20,11 @@ import ProfileScreen from "./src/pages/profile/ProfileScreen";
 import { notificationService } from "./src/services/notificationService";
 
 
-// ... importlar (aynı)
-
 export type RootStackParamList = {
   Login: { logout?: boolean } | undefined;
-  MainTabs: { user?: string }; // Burası kilit nokta
-  AddModal: { user?: string } | undefined;
+  MainTabs: { user?: string };
+  Add: { user?: string } | undefined;
+  Home: { user?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,17 +45,22 @@ function MainTabs({ route }: any) {
 }
 
 export default function App() {
-  useEffect(() => {
-    notificationService.configure();
-  }, []);
+useEffect(() => {
+  const setupNotifications = async () => {
+    await notificationService.requestPermissions();
+    await notificationService.configure();         
+  };
+ 
+  setupNotifications();
+}, []);
   const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2, 
-      staleTime: 1000 * 60 * 5, 
+    defaultOptions: {
+      queries: {
+        retry: 2,
+        staleTime: 1000 * 60 * 5,
+      },
     },
-  },
-});
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -69,9 +73,9 @@ export default function App() {
             >
               <Stack.Screen name="Login" component={Login} />
               <Stack.Screen name="MainTabs" component={MainTabs} />
-              <Stack.Screen name="AddModal" component={AddScreen} />
+              <Stack.Screen name="Add" component={AddScreen} />
             </Stack.Navigator>
-            <Toast config={toastConfig}/>
+            <Toast config={toastConfig} />
             <NoInternetOverlay />
           </NavigationContainer>
         </BottomSheetModalProvider>

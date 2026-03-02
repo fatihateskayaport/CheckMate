@@ -15,6 +15,7 @@ import CustomHeader from "@/src/components/CustomHeader";
 import NiceButton from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 
+import GlassCard from "@/src/components/GlassCard";
 import { theme } from "@/src/constants";
 import { REMINDER_OPTIONS, Todo } from "@/src/constants/types";
 import { notificationService } from "@/src/services/notificationService";
@@ -58,10 +59,13 @@ export default function AddScreen() {
 
     try {
       let notificationId: string | undefined = undefined;
+      const baseDate = new Date(deadline.getTime() - (reminderMinutes * 60000))
 
       if (isReminderEnabled) {
-        const triggerDate = new Date(deadline.getTime() - (reminderMinutes * 60000));
+        const triggerDate = new Date(baseDate);
         const hasPermission = await notificationService.requestPermissions();
+        triggerDate.setSeconds(0);
+        triggerDate.setMilliseconds(0);
 
         if (hasPermission) {
           const id = await notificationService.scheduleTodoNotification(
@@ -97,7 +101,7 @@ export default function AddScreen() {
     }
   }, [todoTitle, isReminderEnabled, addTodoInStore, priority, deadline, description, navigation, reminderMinutes]);
 
-  return (
+return (
     <ScreenWrapper>
       <CustomHeader user={username} title="Yeni Görev" isHome={false} />
 
@@ -111,31 +115,35 @@ export default function AddScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
+            
               <CustomInput
                 placeholder="Görev Başlığı"
                 value={todoTitle}
                 onChangeText={setTodoTitle}
                 maxLength={30}
               />
-
+              <View style={styles.divider} />
               <CustomInputDetail
                 placeholder="Açıklama (Opsiyonel)"
                 value={description}
                 onChangeText={setDescription}
                 maxLength={200}
               />
-            </View>
 
             <View style={styles.selectorsContainer}>
-              <PrioritySelector selected={priority} onSelect={setPriority} />
+              <GlassCard intensity={0.7} style={styles.glassSelector}>
+                <PrioritySelector selected={priority} onSelect={setPriority} />
+              </GlassCard>
 
-              <FormDatePicker
-                date={deadline}
-                onDateChange={handleDateChange}
-              />
+              <GlassCard intensity={0.7} style={styles.glassSelector}>
+                <FormDatePicker
+                  date={deadline}
+                  onDateChange={handleDateChange}
+                />
+              </GlassCard>
             </View>
-            <View style={styles.reminderSection}>
+
+            <GlassCard intensity={0.6} style={styles.reminderGlass}>
               <View style={styles.reminderHeader}>
                 <View style={styles.reminderTitleWrapper}>
                   <MaterialCommunityIcons
@@ -148,7 +156,7 @@ export default function AddScreen() {
                 <Switch
                   value={isReminderEnabled}
                   onValueChange={setIsReminderEnabled}
-                  trackColor={{ false: "#E5E7EB", true: theme.colors.primary + "80" }}
+                  trackColor={{ false: "#D1D5DB", true: theme.colors.primary + "60" }}
                   thumbColor={isReminderEnabled ? theme.colors.primary : "#F3F4F6"}
                 />
               </View>
@@ -175,7 +183,7 @@ export default function AddScreen() {
                   ))}
                 </Animated.View>
               )}
-            </View>
+            </GlassCard>
           </View>
 
           <View style={styles.buttonWrapper}>
@@ -193,30 +201,51 @@ export default function AddScreen() {
 
 const styles = StyleSheet.create({
   flex1: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
-  formContainer: { paddingHorizontal: 20, paddingTop: 10 },
-  inputGroup: { gap: 15, marginBottom: 25 },
-  selectorsContainer: { gap: 20, marginBottom: 25 },
-  reminderSection: { marginTop: 10 },
+  scrollContent: { paddingBottom: 60 },
+  formContainer: { paddingHorizontal: 20, paddingTop: 15, gap: 20 },
+  
+  // Glass Grupları
+  glassGroup: {
+    padding: 15,
+    gap: 5,
+  },
+  glassSelector: {
+    padding: 15,
+    flex: 1, 
+  },
+  reminderGlass: {
+    padding: 18,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    marginHorizontal: 5
+  },
+
+  selectorsContainer: { 
+    flexDirection: 'column',
+    gap: 15 
+  },
+  
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
+    fontWeight: '700',
+    color: "#1F2937",
   },
   optionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginTop: 5,
-    paddingLeft: 5
+    marginTop: 15,
   },
   optionBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: theme.colors.white,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.5)',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   activeOptionBadge: {
     backgroundColor: theme.colors.primary,
@@ -224,7 +253,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 12,
-    color: theme.colors.textPrimary,
+    color: "#4B5563",
   },
   activeOptionText: {
     color: 'white',
@@ -238,13 +267,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
-    paddingHorizontal: 5
   },
   reminderTitleWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 10
   },
-
 });

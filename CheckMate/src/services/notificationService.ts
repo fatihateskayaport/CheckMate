@@ -1,4 +1,3 @@
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -16,11 +15,12 @@ export const notificationService = {
   // 1. İzin İsteme
   requestPermissions: async () => {
 
-    if (!Device.isDevice) {
+    /* if (!Device.isDevice) {
       console.log("UYARI: Simülatörde bildirim kısıtlı olabilir.");
       return true;
-    }
+    } */
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    console.log("existingStatus",existingStatus)
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
@@ -28,16 +28,14 @@ export const notificationService = {
       finalStatus = status;
     }
 
-    console.log("BİLDİRİM İZNİ DURUMU:", finalStatus);
     return finalStatus === 'granted';
   },
 
-  // 2. Android Kanal Yapılandırması (Kritik!)
   configure: async () => {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Varsayılan Kanal',
-        importance: Notifications.AndroidImportance.MAX, // Bildirimin yukarıdan düşmesi için MAX
+        importance: Notifications.AndroidImportance.MAX, 
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#FF231F7C',
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
@@ -46,39 +44,48 @@ export const notificationService = {
   },
 
   // 3. Bildirim Planlama
-  scheduleTodoNotification: async (title: string, date: Date) => {
-    const now = Date.now();
-    const target = date.getTime();
-    const secondsToTrigger = Math.round((target - now) / 1000);
+scheduleTodoNotification: async (title: string, date: Date) => {
+  const triggerDate = new Date(date);
+  triggerDate.setSeconds(0);
+  triggerDate.setMilliseconds(0);
 
-    console.log(`BİLDİRİM HESAPLAMA: Fark ${secondsToTrigger} saniye.`);
+  const now = Date.now();
+  const target = triggerDate.getTime();
+  const secondsToTrigger = Math.floor((target - now) / 1000);
 
-    // Eğer 2 saniyeden azsa kurma
-    if (secondsToTrigger < 2) {
-      console.log("⚠️ BİLDİRİM İPTAL: Hedef zaman çok yakın veya geçmişte.");
-      return null;
-    }
+  console.log(`BİLDİRİM PLANI: Hedef -> ${triggerDate.toLocaleTimeString()} (Kalan: ${secondsToTrigger} sn)`);
 
-    return await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "CheckMate Hatırlatıcı! ⏰",
-        body: `"${title}" vakti geldi.`,
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH, // Android için
-        // Android'de bildirimin görünmesi için oluşturduğumuz kanala bağlıyoruz:
-        ...(Platform.OS === 'android' && { categoryIdentifier: 'default' }),
-      },
-      trigger: Platform.OS === 'ios'
-        ? {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: date
-        } as Notifications.DateTriggerInput
-        : {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: secondsToTrigger,
-        } as Notifications.TimeIntervalTriggerInput,
-    });
-  },
+  if (secondsToTrigger < 2) {
+    console.log("⚠️ BİLDİRİM İPTAL: Hedef zaman geçmişte.");
+    return null;
+  }
+
+  let trigger: Notifications.NotificationTriggerInput;
+
+  if (Platform.OS === 'ios') {
+    trigger = {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: triggerDate,
+    } as Notifications.DateTriggerInput;
+  } else {
+    trigger = {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: secondsToTrigger,
+      repeats: false, 
+    } as Notifications.TimeIntervalTriggerInput;
+  }
+
+  return await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "CheckMate Hatırlatıcı! ⏰",
+      body: `"${title}" vakti geldi.`,
+      sound: true,
+      priority: Notifications.AndroidNotificationPriority.HIGH,
+      ...(Platform.OS === 'android' && { channelId: 'default' }), 
+    },
+    trigger,
+  });
+},
 
   // 4. İptal Etme
   cancelNotification: async (id: string) => {

@@ -1,7 +1,7 @@
+import GlassCard from "@/src/components/GlassCard";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { theme } from "@/src/constants";
 import { Todo } from "@/src/constants/types";
-import TodoBottomSheet from "@/src/pages/profile/components/TodoBottomSheet";
 import { useTodoStore } from "@/src/services/useTodoStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -35,17 +35,19 @@ const StatCard = ({ icon, value, label, color, delay, onPress }: any) => {
         Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
         Animated.timing(slideAnim, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
       ]).start();
-    }, [delay, fadeAnim, slideAnim])
+    }, [delay])
   );
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{ flex: 1 }}>
-      <Animated.View style={[styles.statCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        <View style={[styles.statIconBg, { backgroundColor: color + "20" }]}>
-          <MaterialCommunityIcons name={icon} size={22} color={color} />
-        </View>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+        <GlassCard intensity={0.6} style={styles.statCardGlass}>
+          <View style={[styles.statIconBg, { backgroundColor: color + "15" }]}>
+            <MaterialCommunityIcons name={icon} size={20} color={color} />
+          </View>
+          <Text style={styles.statValue}>{value}</Text>
+          <Text style={styles.statLabel}>{label}</Text>
+        </GlassCard>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -174,64 +176,59 @@ export default function ProfileScreen({ navigation }: any) {
     }, [fadeAnim, scaleAnim])
   );
 
-  return (
-    <ScreenWrapper>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+ return (
+  <ScreenWrapper>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      
+      {/* Profil Başlık Alanı */}
+      <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
+        <View style={[styles.ring, { borderColor: userDesign.color + "15" }]} />
 
-        <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-          <View style={[styles.ring, { borderColor: userDesign.color + "25" }]} />
-
-          <TouchableOpacity onPress={handleImageAction} activeOpacity={0.9}>
-            <Animated.View style={[styles.avatarWrapper, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-
-              <View style={[styles.avatar, { backgroundColor: userImage ? 'transparent' : userDesign.color }]}>
-                {userImage ? (
-                  <Image source={{ uri: userImage }} style={styles.profileImage} />
-                ) : (
-                  <Text style={styles.avatarText}>{userDesign.initials}</Text>
-                )}
-              </View>
-
-              <View style={[styles.cameraBadge, { backgroundColor: theme.colors.primary }]}>
-                <MaterialCommunityIcons name="camera" size={14} color="white" />
-              </View>
-
-            </Animated.View>
-          </TouchableOpacity>
-
-          <Text style={styles.userName}>{username}</Text>
-          <View style={[styles.badge, { backgroundColor: userDesign.color + "15" }]}>
-            <Text style={{ color: userDesign.color, fontWeight: "bold" }}>%{stats.rate} Başarı</Text>
-          </View>
-        </View>
-
-        <View style={styles.statsGrid}>
-          <StatCard icon="format-list-bulleted" value={stats.total} label="Toplam" color={theme.colors.primary} delay={100} onPress={() => setSheetData({ visible: true, title: "Tüm Görevler", data: todos })} />
-          <StatCard icon="check-all" value={stats.completed} label="Bitti" color={theme.colors.success} delay={200} onPress={() => setSheetData({ visible: true, title: "Tamamlananlar", data: todos.filter(t => t.isCompleted) })} />
-          <StatCard icon="timer-sand" value={stats.pending} label="Bekliyor" color={theme.colors.warning} delay={300} onPress={() => setSheetData({ visible: true, title: "Bekleyenler", data: todos.filter(t => !t.isCompleted) })} />
-        </View>
-
-        <WeeklyChart data={getWeeklyStats()} />
-
-        <View style={styles.logoutContainer}>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.7}>
-            <View style={styles.logoutContent}>
-              <MaterialCommunityIcons name="logout-variant" size={22} color={theme.colors.danger} />
-              <Text style={styles.logoutText}>Oturumu Kapat</Text>
+        <TouchableOpacity onPress={handleImageAction} activeOpacity={0.9}>
+          <Animated.View style={[styles.avatarWrapper, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+            <View style={[styles.avatar, { backgroundColor: userImage ? 'transparent' : userDesign.color }]}>
+              {userImage ? (
+                <Image source={{ uri: userImage }} style={styles.profileImage} />
+              ) : (
+                <Text style={styles.avatarText}>{userDesign.initials}</Text>
+              )}
             </View>
-          </TouchableOpacity>
-          <Text style={styles.versionText}>Versiyon 0.1.1</Text>
-        </View>
-      </ScrollView>
+            <View style={[styles.cameraBadge, { backgroundColor: theme.colors.primary }]}>
+              <MaterialCommunityIcons name="camera" size={14} color="white" />
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
 
-      <TodoBottomSheet
-        visible={sheetData.visible}
-        onClose={() => setSheetData(p => ({ ...p, visible: false }))}
-        title={sheetData.title}
-        todos={sheetData.data}
-      />
-    </ScreenWrapper>
-  );
+        <Text style={styles.userName}>{username}</Text>
+        <GlassCard intensity={0.4} style={styles.badgeGlass}>
+           <Text style={{ color: userDesign.color, fontWeight: "bold", fontSize: 12 }}>
+             %{stats.rate} Başarı
+           </Text>
+        </GlassCard>
+      </View>
+
+      <View style={styles.statsGrid}>
+        <StatCard icon="format-list-bulleted" value={stats.total} label="Toplam" color={theme.colors.primary} delay={100} onPress={() => setSheetData({ visible: true, title: "Tüm Görevler", data: todos })} />
+        <StatCard icon="check-all" value={stats.completed} label="Bitti" color={theme.colors.success} delay={200} onPress={() => setSheetData({ visible: true, title: "Tamamlananlar", data: todos.filter(t => t.isCompleted) })} />
+        <StatCard icon="timer-sand" value={stats.pending} label="Bekliyor" color={theme.colors.warning} delay={300} onPress={() => setSheetData({ visible: true, title: "Bekleyenler", data: todos.filter(t => !t.isCompleted) })} />
+      </View>
+
+      <View style={styles.chartWrapper}>
+        <WeeklyChart data={getWeeklyStats()} />
+      </View>
+
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity onPress={handleLogout} activeOpacity={0.7}>
+          <GlassCard intensity={0.5} style={styles.logoutGlass}>
+            <MaterialCommunityIcons name="logout-variant" size={20} color={theme.colors.danger} />
+            <Text style={styles.logoutText}>Oturumu Kapat</Text>
+          </GlassCard>
+        </TouchableOpacity>
+        <Text style={styles.versionText}>Versiyon 0.1.1</Text>
+      </View>
+    </ScrollView>
+  </ScreenWrapper>
+);
 }
 
 const styles = StyleSheet.create({
@@ -274,7 +271,7 @@ const styles = StyleSheet.create({
   userName: { fontSize: 22, fontWeight: "bold", color: "#333" },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 8 },
   statsGrid: { flexDirection: "row", paddingHorizontal: 15, gap: 10 },
-  statCard: { backgroundColor: "white", borderRadius: 20, padding: 15, alignItems: "center", borderWidth: 1, borderColor: "#eee" },
+  
   statIconBg: { width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center" },
   statValue: { fontSize: 18, fontWeight: "bold", marginTop: 5 },
   statLabel: { fontSize: 12, color: "#666" },
@@ -285,19 +282,31 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.border,
     paddingTop: theme.layout.spacing.lg,
   },
-  logoutBtn: {
+  logoutText: { fontSize: theme.typography.sizes.md, fontWeight: theme.typography.weights.semibold, color: theme.colors.danger },
+  versionText: { textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary, fontSize: 10, opacity: 0.5 },
+    
+    statCardGlass: {
+    padding: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 110,
+  },
+  badgeGlass: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 8,
+    borderRadius: 12,
+  },
+  chartWrapper: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+  },
+  logoutGlass: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: theme.layout.spacing.md,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.layout.borderRadius.md,
-    ...Platform.select({
-      ios: { shadowColor: theme.colors.danger, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-      android: { elevation: 2 }
-    })
+    padding: 15,
+    gap: 10,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
-  logoutContent: { flexDirection: "row", alignItems: "center", gap: theme.layout.spacing.sm },
-  logoutText: { fontSize: theme.typography.sizes.md, fontWeight: theme.typography.weights.semibold, color: theme.colors.danger },
-  versionText: { textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary, fontSize: 10, opacity: 0.5 }
 });

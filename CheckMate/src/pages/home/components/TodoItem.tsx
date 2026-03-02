@@ -1,14 +1,16 @@
+import GlassCard from "@/src/components/GlassCard";
 import { theme } from "@/src/constants";
 import { Todo } from "@/src/constants/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
+  Alert,
   Animated,
-  Platform,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 type Props = {
@@ -22,8 +24,7 @@ const TodoItem = ({ item, onToggle }: Props) => {
 
   const formattedDate = useMemo(() => {
     const d = new Date(item.createdAt);
-    if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
+    return isNaN(d.getTime()) ? "" : d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
   }, [item.createdAt]);
 
   const deadlineInfo = useMemo(() => {
@@ -35,16 +36,11 @@ const TodoItem = ({ item, onToggle }: Props) => {
     const isPast = d < now && !item.isCompleted;
 
     return {
-      text: d.toLocaleDateString("tr-TR", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit"
-      }),
+      text: d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + " - " + 
+            d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }),
       isOverdue: isPast
     };
   }, [item.deadline, item.isCompleted]);
-
 
   const priorityColor = useMemo(() => {
     switch (item.priority) {
@@ -66,146 +62,162 @@ const TodoItem = ({ item, onToggle }: Props) => {
 
   const handleToggle = () => {
     Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.96, duration: 100, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
-
     onToggle(item.id);
   };
 
-  const checkScale = checkAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 1.2, 1],
-  });
+  const onShare = async (todo: Todo) => {
+    try {
+      const message = `🎯 CheckMate Görevi\n📌 Başlık: ${todo.title}\n📝 Açıklama: ${todo.description || 'Yok'}\n📅 Teslim: ${new Date(todo.deadline!).toLocaleString('tr-TR')}\nCheckMate ile planlandı. ✨`;
+      await Share.share({ message });
+    } catch (error) {
+      Alert.alert('Hata', 'Paylaşım yapılamadı.');
+    }
+  };
 
-  return (
-    <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      <TouchableOpacity onPress={handleToggle} activeOpacity={0.7} style={styles.inner}>
-        <View style={[
-          styles.checkbox,
-          item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
-        ]}>
-          <Animated.View style={{ transform: [{ scale: checkScale }] }}>
-            <MaterialCommunityIcons name="check-bold" size={14} color={theme.colors.white} />
-          </Animated.View>
-        </View>
+return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <GlassCard 
 
-        <View style={styles.textWrapper}>
-          <Text style={[styles.title, item.isCompleted && styles.completedText]} numberOfLines={1}>
-            {item.title}
-          </Text>
+        intensity={item.isCompleted ? 0.4 : 0.7} 
+        style={styles.cardContainer}
+      >
+        <TouchableOpacity onPress={handleToggle} activeOpacity={0.8} style={styles.inner}>
+          
+          <View style={[
+            styles.checkbox,
+            item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+          ]}>
+            <Animated.View style={{ transform: [{ scale: checkAnim.interpolate({
+              inputRange: [0, 0.5, 1],
+              outputRange: [0, 1.2, 1]
+            }) }] }}>
+              <MaterialCommunityIcons name="check-bold" size={12} color={theme.colors.white} />
+            </Animated.View>
+          </View>
+          <View style={styles.textWrapper}>
+            <Text style={[styles.title, item.isCompleted && styles.completedText]} numberOfLines={1}>
+              {item.title}
+            </Text>
 
-          {deadlineInfo && (
-            <View style={styles.deadlineRow}>
-              <MaterialCommunityIcons
-                name="clock-outline"
-                size={12}
-                color={deadlineInfo.isOverdue ? theme.colors.danger : theme.colors.textSecondary}
-              />
-              <Text style={[
-                styles.deadlineText,
-                deadlineInfo.isOverdue && { color: theme.colors.danger, fontWeight: 'bold' }
-              ]}>
-                {deadlineInfo.text}
-              </Text>
+            <View style={styles.metaRow}>
+              {deadlineInfo && (
+                <View style={styles.deadlineBadge}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={10}
+                    color={deadlineInfo.isOverdue ? theme.colors.danger : theme.colors.primary}
+                  />
+                  <Text style={[
+                    styles.deadlineText,
+                    deadlineInfo.isOverdue && { color: theme.colors.danger, fontWeight: '700' }
+                  ]}>
+                    {deadlineInfo.text}
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.dateText}>{formattedDate}</Text>
             </View>
-          )}
+          </View>
 
-          <Text style={styles.description} numberOfLines={1}>
-            {item.description || "Açıklama eklenmemiş"}
-          </Text>
-        </View>
+          <View style={styles.rightActions}>
+            <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
+            
+            <TouchableOpacity 
+              onPress={() => onShare(item)} 
+              style={styles.glassShareButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons name="share-variant" size={16} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.rightInfo}>
-          <View style={[styles.priorityIndicator, { backgroundColor: priorityColor }]} />
-          <Text style={styles.dateText}>{formattedDate}</Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </GlassCard>
     </Animated.View>
   );
 };
 
-export default TodoItem;
-
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.layout.borderRadius.md,
-    marginVertical: theme.layout.spacing.xs,
-    marginHorizontal: theme.layout.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+  cardContainer: {
+    marginHorizontal: 16,
+    marginVertical: 6,
+  
   },
   inner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.layout.spacing.md,
-    gap: theme.layout.spacing.md,
+    padding: 14,
+    gap: 12,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.1)',
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: theme.colors.background,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   textWrapper: {
     flex: 1,
-    justifyContent: "center",
   },
   title: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.textPrimary,
-  },
-  description: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
   },
   completedText: {
-    color: theme.colors.textSecondary,
     textDecorationLine: "line-through",
-    opacity: 0.6,
+    color: "#9CA3AF",
   },
-  rightInfo: {
-    alignItems: "flex-end",
-    gap: 6,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deadlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    gap: 4,
+  },
+  deadlineText: {
+    fontSize: 10,
+    color: theme.colors.primary,
+    fontWeight: '500',
   },
   dateText: {
     fontSize: 10,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.weights.medium,
+    color: "#9CA3AF",
   },
-  priorityIndicator: {
-    width: 24,
-    height: 4,
-    borderRadius: theme.layout.borderRadius.full,
-  },
-  deadlineRow: {
+  rightActions: {
+    alignItems: "center",
+    gap: 10,
     flexDirection: 'row',
+  },
+  priorityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  glassShareButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.15)',
   },
-
-  deadlineText: {
-    fontSize: 11,
-    color: theme.colors.textSecondary
-  },
-
 });
+
+export default TodoItem;

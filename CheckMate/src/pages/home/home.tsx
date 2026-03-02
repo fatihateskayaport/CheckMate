@@ -1,12 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Alert, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 import { RootStackParamList } from "@/App";
-import { theme } from "@/src/constants";
+import { theme, Todo } from "@/src/constants";
 import { useTodoStore } from "@/src/services/useTodoStore";
 
 
@@ -20,11 +20,28 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 export default function Home({ route, navigation }: Props) {
   const user = route.params?.user ?? "Misafir";
 
-  
+
   const todos = useTodoStore((state) => state.todos);
   const setUsername = useTodoStore((state) => state.setUsername);
   const toggleTodo = useTodoStore((state) => state.toggleTodo);
   const deleteTodo = useTodoStore((state) => state.deleteTodo);
+
+  const shareAllTodos = async (todos: Todo[]) => {
+    const pendingTodos = todos.filter(t => !t.isCompleted);
+
+    if (pendingTodos.length === 0) {
+      Alert.alert("Liste Boş", "Paylaşılacak bekleyen görev bulunamadı.");
+      return;
+    }
+
+    const listText = pendingTodos
+      .map((t, index) => `${index + 1}. [ ] ${t.title} (${new Date(t.deadline).toLocaleDateString()})`)
+      .join('\n');
+
+    const finalMessage = `📝 *Günün Planı:*\n\n${listText}\n\nCheckMate ile gönderildi. ✅`;
+
+    await Share.share({ message: finalMessage });
+  };
 
 
   useEffect(() => {
@@ -33,42 +50,63 @@ export default function Home({ route, navigation }: Props) {
 
   const isEmpty = todos.length === 0;
 
-  return (
-    <ScreenWrapper>
-      <View style={styles.headerContainer}>
-        <CustomHeader user={user} showLogout={false} />
-      </View>
+return (
+  <ScreenWrapper>
+    <View style={styles.headerContainer}>
+      <CustomHeader user={user} />
+    </View>
 
-      <View style={styles.mainContainer}>
-        <GestureHandlerRootView style={styles.flex1}>
-          {isEmpty ? (
-            <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons 
-                name="clipboard-text-outline" 
-                size={80} 
-                color={theme.colors.border} 
+    <View style={styles.mainContainer}>
+      <GestureHandlerRootView style={styles.flex1}>
+        {isEmpty ? (
+          /* --- DURUM 1: LİSTE BOMBOŞSA --- */
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons
+              name="clipboard-text-outline"
+              size={80}
+              color={theme.colors.border}
+            />
+            <Text style={styles.emptyText}>Henüz bir görev eklemedin.</Text>
+            <Text style={styles.emptySubText}>Hadi, plan yapmaya başla!</Text>
+            
+            {/* Sadece burada büyük, merkezi "Ekle" butonu var */}
+            <View style={{ marginTop: 20, width: '70%' }}>
+              <NiceButton
+                title="Yeni Görev Ekle"
+                status="default"
+                onPress={() => navigation.navigate("Add")}
               />
-              <Text style={styles.emptyText}>Henüz bir görev eklemedin.</Text>
-              <Text style={styles.emptySubText}>Hadi, plan yapmaya başla!</Text>
             </View>
-          ) : (
+          </View>
+        ) : (
+          /* --- DURUM 2: LİSTEDE GÖREV VARSA --- */
+          <>
             <TodoList
               todos={todos}
               onToggle={toggleTodo}
               onDelete={deleteTodo}
             />
-          )}
-          <View style={styles.fabContainer}>
-            <NiceButton 
-              title="Yeni Görev Ekle" 
-              status="default" 
-              onPress={() => navigation.navigate("Add")}
-            />
-          </View>
-        </GestureHandlerRootView>
-      </View>
-    </ScreenWrapper>
-  );
+
+            {/* SADECE LİSTE VARKEN GÖRÜNEN ALT PANEL */}
+            <View style={styles.bottomControlsContainer}>
+              {/* Listeyi Paylaş (Cam Efektli) */}
+              <TouchableOpacity 
+                style={styles.glassShareButton} 
+                onPress={() => shareAllTodos(todos)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="export-variant" size={20} color={theme.colors.primary} />
+                <Text style={styles.shareBtnText}>Paylaş</Text>
+              </TouchableOpacity>
+
+             
+            </View>
+          </>
+        )}
+      </GestureHandlerRootView>
+    </View>
+  </ScreenWrapper>
+);
 }
 
 const styles = StyleSheet.create({
@@ -100,21 +138,65 @@ const styles = StyleSheet.create({
     marginTop: theme.layout.spacing.xs,
     textAlign: "center",
   },
+   fullShareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    gap: 10,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    marginVertical: 10,
+    bottom: theme.layout.spacing.xl,
+  },
+  shareBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.primary, 
+  },
   fabContainer: {
     position: "absolute",
     bottom: theme.layout.spacing.lg,
     left: theme.layout.spacing.lg,
     right: theme.layout.spacing.lg,
-    ...Platform.select({
-      ios: {
-        shadowColor: theme.colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
   },
+  emptyButtonWrapper: {
+    marginTop: 30,
+    width: '100%',
+    paddingHorizontal: 40,
+  },
+  bottomControlsContainer: {
+  position: "absolute",
+  bottom: 25, // Ekranın en altından biraz yukarıda
+  left: 20,
+  right: 20,
+  flexDirection: 'row', // Butonları yan yana getirir
+  alignItems: 'center',
+  gap: 12,
+  padding: 10,
+},
+glassShareButton: {
+  flex: 1, // Paylaş butonu daha küçük kalsın
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+  paddingVertical: 14,
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: 'rgba(99, 102, 241, 0.2)',
+  gap: 8,
+  elevation: 4,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 10,
+},
 });
