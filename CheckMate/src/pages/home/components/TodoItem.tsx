@@ -1,6 +1,6 @@
 import GlassCard from "@/src/components/GlassCard";
 import { theme } from "@/src/constants";
-import { Todo } from "@/src/constants/types";
+import { CATEGORIES, Todo } from "@/src/constants/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
@@ -18,9 +18,10 @@ type Props = {
   onToggle: (id: string) => void;
 };
 
-const TodoItem = ({ item, onToggle }: Props) => {
+const TodoItem = ({item, onToggle }: Props) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const checkAnim = useRef(new Animated.Value(item.isCompleted ? 1 : 0)).current;
+  const categoryData = CATEGORIES.find(c => c.id === item.category);
 
   const formattedDate = useMemo(() => {
     const d = new Date(item.createdAt);
@@ -124,6 +125,19 @@ return (
 
           <View style={styles.rightActions}>
             <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
+
+            {categoryData && (
+                <View style={[styles.categoryBadge, { backgroundColor: categoryData.color + '15' }]}>
+                  <MaterialCommunityIcons 
+                    name={categoryData.icon as any} 
+                    size={12} 
+                    color={categoryData.color} 
+                  />
+                  <Text style={[styles.categoryBadgeText, { color: categoryData.color }]}>
+                    {categoryData.label}
+                  </Text>
+                </View>
+              )}
             
             <TouchableOpacity 
               onPress={() => onShare(item)} 
@@ -175,11 +189,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
     color: "#9CA3AF",
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   deadlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -217,6 +226,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(99, 102, 241, 0.15)',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  categoryBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 });
 

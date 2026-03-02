@@ -1,4 +1,4 @@
-import { Todo } from "@/src/constants/types";
+import { CategoryType, Todo } from "@/src/constants/types";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -10,7 +10,14 @@ interface TodoState {
   userImage: string | null;
   setUsername: (name: string) => void;
   setUserImage: (uri: string | null) => void;
-  addTodo: (title: string, priority: 'Low' | 'Medium' | 'High', deadline: string, description?: string, notificationId?:string) => void;
+  addTodo: (
+    title: string, 
+    priority: Todo['priority'], 
+    deadline: string, 
+    description?: string, 
+    notificationId?: string,
+    category?: CategoryType 
+  ) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
   clearTodos: () => void;
@@ -26,7 +33,8 @@ export const useTodoStore = create<TodoState>()(
       setUsername: (name: string) => set({ username: name }),
       setUserImage: (uri) => set({ userImage: uri }),
 
-      addTodo: (title, priority, deadline, description, notificationId?) => {
+      // GÜNCELLEME: Fonksiyon parametrelerine 'category' eklendi
+      addTodo: (title, priority, deadline, description, notificationId?, category = 'Personal') => {
         const newTodo: Todo = {
           id: Date.now().toString(),
           title: title,
@@ -36,6 +44,7 @@ export const useTodoStore = create<TodoState>()(
           isCompleted: false,
           createdAt: new Date().toISOString(),
           notificationId,
+          category, // <-- Artık dışarıdan gelen kategori buraya yazılıyor
         };
         
         set((state) => ({ 
@@ -60,18 +69,17 @@ export const useTodoStore = create<TodoState>()(
       },
 
       deleteTodo: async (id: string) => {
-
-  set((state) => {
-    const todoToDelete = state.todos.find((t) => t.id === id);
-    if (todoToDelete?.notificationId) {
-      notificationService.cancelNotification(todoToDelete.notificationId)
-        .catch(err => console.log("Bildirim silinirken hata oluştu:", err));
-    }
-    return {
-      todos: state.todos.filter((todo) => todo.id !== id),
-    };
-  });
-},
+        set((state) => {
+          const todoToDelete = state.todos.find((t) => t.id === id);
+          if (todoToDelete?.notificationId) {
+            notificationService.cancelNotification(todoToDelete.notificationId)
+              .catch(err => console.log("Bildirim silinirken hata oluştu:", err));
+          }
+          return {
+            todos: state.todos.filter((todo) => todo.id !== id),
+          };
+        });
+      },
 
       clearTodos: () => set({ todos: [] }),
     }),
