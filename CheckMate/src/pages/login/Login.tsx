@@ -8,8 +8,13 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -72,7 +77,7 @@ export default function Login({ navigation, route }: any) {
     const checkUser = async () => {
       const storedUser = await AsyncStorage.getItem("USERNAME");
       if (storedUser && !route?.params?.logout) {
-        navigation.replace("Home", { user: storedUser });
+        navigation.replace("MainTabs", { user: storedUser });
       }
     };
     checkUser();
@@ -97,7 +102,7 @@ export default function Login({ navigation, route }: any) {
       await AsyncStorage.setItem("USERNAME", username);
       setTimeout(() => {
         setStatus("default");
-        navigation.replace("Home", { user: username });
+        navigation.replace("MainTabs", { user: username });
       }, 600);
     } catch (error) {
       setStatus("default");
@@ -107,75 +112,82 @@ export default function Login({ navigation, route }: any) {
 
   return (
     <ScreenWrapper>
-      <View
-        style={[
-          styles.container,
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 24 },
-        ]}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.hero}>
-          <Animated.View
-            style={[
-              styles.logoWrapper,
-              { opacity: logoAnim, transform: [{ scale: logoScale }] },
-            ]}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView 
+            contentContainerStyle={{ flexGrow: 1 }}
+            bounces={false}
+            showsVerticalScrollIndicator={false}
           >
-            <View style={styles.logoBg}>
-              <MaterialCommunityIcons
-                name="checkbox-marked-circle-outline"
-                size={48}
-                color="#fff"
-              />
-            </View>
-            {/* Dekoratif halkalar */}
-            <View
-              style={[styles.ring, { borderColor: "rgba(99,102,241,0.2)" }]}
-            />
             <View
               style={[
-                styles.ringOuter,
-                { borderColor: "rgba(99,102,241,0.1)" },
+                styles.container,
+                { paddingTop: insets.top, paddingBottom: insets.bottom + 24 },
               ]}
-            />
-          </Animated.View>
+            >
+              <View style={styles.hero}>
+                <Animated.View
+                  style={[
+                    styles.logoWrapper,
+                    { opacity: logoAnim, transform: [{ scale: logoScale }] },
+                  ]}
+                >
+                  <View style={styles.logoBg}>
+                    <MaterialCommunityIcons
+                      name="checkbox-marked-circle-outline"
+                      size={48}
+                      color="#fff"
+                    />
+                  </View>
+                  <View style={[styles.ring, { borderColor: "rgba(99,102,241,0.2)" }]} />
+                  <View style={[styles.ringOuter, { borderColor: "rgba(99,102,241,0.1)" }]} />
+                </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.titleWrapper,
-              { opacity: textAnim, transform: [{ translateY: textSlide }] },
-            ]}
-          >
-            <Text style={styles.appName}>CheckMate</Text>
-            <Text style={styles.appTagline}>Görevlerini kolayca takip et</Text>
-          </Animated.View>
-        </View>
+                <Animated.View
+                  style={[
+                    styles.titleWrapper,
+                    { opacity: textAnim, transform: [{ translateY: textSlide }] },
+                  ]}
+                >
+                  <Text style={styles.appName}>CheckMate</Text>
+                  <Text style={styles.appTagline}>Görevlerini kolayca takip et</Text>
+                </Animated.View>
+              </View>
+              <Animated.View
+                style={[
+                  styles.form,
+                  { opacity: formAnim, transform: [{ translateY: formSlide }] },
+                ]}
+              >
+                <Text style={styles.formTitle}>Hoş Geldin 👋</Text>
+                <Text style={styles.formSubtitle}>Kullanıcı adınla devam et</Text>
 
-        <Animated.View
-          style={[
-            styles.form,
-            { opacity: formAnim, transform: [{ translateY: formSlide }] },
-          ]}
-        >
-          <Text style={styles.formTitle}>Hoş Geldin 👋</Text>
-          <Text style={styles.formSubtitle}>Kullanıcı adınla devam et</Text>
+                <View style={styles.inputOuterContainer}>
+                  <CustomInput
+                    placeholder="Kullanıcı adını gir"
+                    value={username}
+                    onChangeText={setUsername}
+                    maxLength={15}
+                    error={username.length > 15 ? "En fazla 15 karakter" : undefined}
+                    containerStyle={{ width: '100%' }}
+                  />
+                </View>
 
-          <View style={styles.inputContainer}>
-            <CustomInput
-              placeholder="Kullanıcı adını gir"
-              value={username}
-              onChangeText={setUsername}
-              maxLength={15}
-              error={username.length > 15 ? "En fazla 15 karakter" : undefined}
-            />
-          </View>
+                <View style={styles.buttonWrapper}>
+                  <NiceButton title="Giriş Yap" status={status} onPress={handleLogin} />
+                </View>
 
-          <NiceButton title="Giriş Yap" status={status} onPress={handleLogin} />
-
-          <Text style={styles.hint}>
-            Hesap gerekmez — sadece bir isim yeterli ✨
-          </Text>
-        </Animated.View>
-      </View>
+                <Text style={styles.hint}>
+                  Hesap gerekmez — sadece bir isim yeterli ✨
+                </Text>
+              </Animated.View>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
@@ -186,7 +198,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  // Hero
   hero: {
     flex: 1,
     justifyContent: "center",
@@ -242,7 +253,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Form
   form: {
     backgroundColor: "#fff",
     borderRadius: 32,
@@ -268,12 +278,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    marginVertical: 4,
+    width: '100%',
   },
   hint: {
     fontSize: 12,
     color: "#C4C9D4",
     textAlign: "center",
     marginTop: 4,
+  },
+  inputOuterContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  buttonWrapper: {
+    width: '100%',
   },
 });

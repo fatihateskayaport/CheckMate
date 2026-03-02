@@ -21,6 +21,7 @@ interface CustomInputProps {
   maxLength?: number;
   iconName?: keyof typeof Ionicons.glyphMap;
   onIconPress?: (event: GestureResponderEvent) => void;
+  containerStyle?: object;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -33,11 +34,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
   maxLength,
   iconName,
   onIconPress,
+  containerStyle,
 }) => {
   return (
     
     <View style={styles.container}>
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, containerStyle]}>
         <TextInput
           value={value}
           onChangeText={onChangeText}

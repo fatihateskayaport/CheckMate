@@ -19,6 +19,7 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { WeeklyChart } from "./components/WeeklyChart";
 
 const AVATAR_COLORS = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
 
@@ -53,6 +54,25 @@ const StatCard = ({ icon, value, label, color, delay, onPress }: any) => {
 export default function ProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { todos, username, setUsername, userImage, setUserImage } = useTodoStore();
+
+  const getWeeklyStats = () => {
+    const stats = [0, 0, 0, 0, 0, 0, 0]; // Pzt'den Paz'a
+    const now = new Date();
+    
+    todos.forEach(todo => {
+      if (todo.isCompleted) {
+        const completedDate = new Date(todo.deadline); // Veya tamamlanma tarihi tutuyorsan o
+        const diffInDays = Math.floor((now.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays < 7) {
+          // Basitlik adına: Hangi güne denk geliyorsa orayı artır
+          const dayIndex = (completedDate.getDay() + 6) % 7; // Pazartesi 0 olacak şekilde ayar
+          stats[dayIndex]++;
+        }
+      }
+    });
+    return stats;
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -190,6 +210,8 @@ export default function ProfileScreen({ navigation }: any) {
           <StatCard icon="check-all" value={stats.completed} label="Bitti" color={theme.colors.success} delay={200} onPress={() => setSheetData({ visible: true, title: "Tamamlananlar", data: todos.filter(t => t.isCompleted) })} />
           <StatCard icon="timer-sand" value={stats.pending} label="Bekliyor" color={theme.colors.warning} delay={300} onPress={() => setSheetData({ visible: true, title: "Bekleyenler", data: todos.filter(t => !t.isCompleted) })} />
         </View>
+
+        <WeeklyChart data={getWeeklyStats()} />
 
         <View style={styles.logoutContainer}>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.7}>

@@ -13,7 +13,7 @@ import {
 
 type Props = {
   item: Todo;
-  onToggle: (id: string) => void; 
+  onToggle: (id: string) => void;
 };
 
 const TodoItem = ({ item, onToggle }: Props) => {
@@ -26,7 +26,26 @@ const TodoItem = ({ item, onToggle }: Props) => {
     return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
   }, [item.createdAt]);
 
-  
+  const deadlineInfo = useMemo(() => {
+    if (!item.deadline) return null;
+    const d = new Date(item.deadline);
+    if (isNaN(d.getTime())) return null;
+
+    const now = new Date();
+    const isPast = d < now && !item.isCompleted;
+
+    return {
+      text: d.toLocaleDateString("tr-TR", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      }),
+      isOverdue: isPast
+    };
+  }, [item.deadline, item.isCompleted]);
+
+
   const priorityColor = useMemo(() => {
     switch (item.priority) {
       case "High": return theme.colors.highRisk;
@@ -43,15 +62,14 @@ const TodoItem = ({ item, onToggle }: Props) => {
       damping: 15,
       stiffness: 150,
     }).start();
-  }, [item.isCompleted]);
+  }, [checkAnim, item.isCompleted]);
 
   const handleToggle = () => {
-    // Dokunma animasyonu
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
-    
+
     onToggle(item.id);
   };
 
@@ -62,14 +80,9 @@ const TodoItem = ({ item, onToggle }: Props) => {
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      <TouchableOpacity 
-        onPress={handleToggle} 
-        activeOpacity={0.7} 
-        style={styles.inner}
-      >
-        {/* Checkbox Bölümü */}
+      <TouchableOpacity onPress={handleToggle} activeOpacity={0.7} style={styles.inner}>
         <View style={[
-          styles.checkbox, 
+          styles.checkbox,
           item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
         ]}>
           <Animated.View style={{ transform: [{ scale: checkScale }] }}>
@@ -77,26 +90,35 @@ const TodoItem = ({ item, onToggle }: Props) => {
           </Animated.View>
         </View>
 
-        {/* Metin İçeriği */}
         <View style={styles.textWrapper}>
-          <Text 
-            style={[
-              styles.title, 
-              item.isCompleted && styles.completedText
-            ]} 
-            numberOfLines={1}
-          >
+          <Text style={[styles.title, item.isCompleted && styles.completedText]} numberOfLines={1}>
             {item.title}
           </Text>
+
+          {deadlineInfo && (
+            <View style={styles.deadlineRow}>
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={12}
+                color={deadlineInfo.isOverdue ? theme.colors.danger : theme.colors.textSecondary}
+              />
+              <Text style={[
+                styles.deadlineText,
+                deadlineInfo.isOverdue && { color: theme.colors.danger, fontWeight: 'bold' }
+              ]}>
+                {deadlineInfo.text}
+              </Text>
+            </View>
+          )}
+
           <Text style={styles.description} numberOfLines={1}>
             {item.description || "Açıklama eklenmemiş"}
           </Text>
         </View>
 
-
         <View style={styles.rightInfo}>
-          <Text style={styles.dateText}>{formattedDate}</Text>
           <View style={[styles.priorityIndicator, { backgroundColor: priorityColor }]} />
+          <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -113,7 +135,6 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.layout.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    // Modern Gölge
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -175,4 +196,16 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: theme.layout.borderRadius.full,
   },
+  deadlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2
+  },
+
+  deadlineText: {
+    fontSize: 11,
+    color: theme.colors.textSecondary
+  },
+
 });

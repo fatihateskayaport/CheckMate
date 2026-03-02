@@ -2,6 +2,7 @@ import { Todo } from "@/src/constants/types";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { notificationService } from "./notificationService";
 
 interface TodoState {
   todos: Todo[];
@@ -9,7 +10,7 @@ interface TodoState {
   userImage: string | null;
   setUsername: (name: string) => void;
   setUserImage: (uri: string | null) => void;
-  addTodo: (title: string, priority: 'Low' | 'Medium' | 'High', deadline: string, description?: string) => void;
+  addTodo: (title: string, priority: 'Low' | 'Medium' | 'High', deadline: string, description?: string, notificationId?:string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
   clearTodos: () => void;
@@ -25,7 +26,7 @@ export const useTodoStore = create<TodoState>()(
       setUsername: (name: string) => set({ username: name }),
       setUserImage: (uri) => set({ userImage: uri }),
 
-      addTodo: (title, priority, deadline, description) => {
+      addTodo: (title, priority, deadline, description, notificationId?) => {
         const newTodo: Todo = {
           id: Date.now().toString(),
           title: title,
@@ -34,6 +35,7 @@ export const useTodoStore = create<TodoState>()(
           deadline: deadline,
           isCompleted: false,
           createdAt: new Date().toISOString(),
+          notificationId,
         };
         
         set((state) => ({ 
@@ -47,7 +49,6 @@ export const useTodoStore = create<TodoState>()(
           todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
         );
 
-        // Sıralama mantığı: Tamamlanmayanlar her zaman üstte
         const sorted = updated.sort((a, b) => {
           if (a.isCompleted !== b.isCompleted) {
             return a.isCompleted ? 1 : -1;
@@ -58,11 +59,19 @@ export const useTodoStore = create<TodoState>()(
         set({ todos: sorted });
       },
 
-      deleteTodo: (id: string) => {
-        set((state) => ({
-          todos: state.todos.filter((todo) => todo.id !== id),
-        }));
-      },
+      deleteTodo: async (id: string) => {
+
+  set((state) => {
+    const todoToDelete = state.todos.find((t) => t.id === id);
+    if (todoToDelete?.notificationId) {
+      notificationService.cancelNotification(todoToDelete.notificationId)
+        .catch(err => console.log("Bildirim silinirken hata oluştu:", err));
+    }
+    return {
+      todos: state.todos.filter((todo) => todo.id !== id),
+    };
+  });
+},
 
       clearTodos: () => set({ todos: [] }),
     }),
