@@ -22,8 +22,18 @@ export default function CustomHeader({ user, weather, isHome = true }: Props) {
   const navigation = useNavigation<any>();
   const [isOpen, setIsOpen] = useState(false);
 
+  const hour = new Date().getHours();
+  let message = "";
+  if (hour< 12) {
+    message= "Günaydın,";    
+  }else if (hour< 17){
+    message = "Tünaydın,";
+  }else {
+    message = "İyi akşamlar,";
+  }
+
   const toggleSheet = () => {
-    if (!isHome) return; // AddScreen'de tıklamayı engelle
+    if (!isHome) return; 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsOpen(!isOpen);
   };
@@ -46,7 +56,7 @@ export default function CustomHeader({ user, weather, isHome = true }: Props) {
             ) : (
               // ANA SAYFA KARŞILAMA VE HAVA DURUMU
               <>
-                <Text style={styles.greeting}>Merhaba {user.split(' ')[0]} 👋</Text>
+                <Text style={styles.greeting}>{message} {user.split(' ')[0]} 👋</Text>
                 <TouchableOpacity onPress={toggleSheet} activeOpacity={0.7} style={styles.smartChip}>
                   <MaterialCommunityIcons name={weather?.icon as any || 'weather-sunny'} size={14} color="#6366F1" />
                   <Text style={styles.chipText}>{weather ? `${weather.temp}°C • ${weather.condition}` : 'Hava Durumu'}</Text>

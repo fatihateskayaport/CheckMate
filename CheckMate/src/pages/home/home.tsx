@@ -14,6 +14,7 @@ import CustomHeader from "@/src/components/CustomHeader";
 import GlassCard from "@/src/components/GlassCard";
 import NiceButton from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
+import { WeatherOverlay } from "@/src/components/WeatherOverlay";
 import { globalStyles } from "@/src/constants/globalStyles";
 import TodoList from "@/src/pages/home/components/TodoList";
 import { getWeatherData } from "@/src/services/weatherService";
@@ -35,6 +36,8 @@ export default function Home({ route, navigation }: Props) {
   const [weatherData, setWeatherData] = useState<any>(null);
 const [isWeatherLoading, setIsWeatherLoading] = useState(true);
 
+const [hasAnimated, setHasAnimated] = useState(false);
+
 
   
 useEffect(() => {
@@ -49,6 +52,7 @@ useEffect(() => {
       setIsWeatherLoading(false);
     }
   };
+  
 
   loadDashboard();
 }, []);
@@ -80,12 +84,19 @@ useEffect(() => {
     if (activeFilter === 'All') return todos;
     return todos.filter(todo => todo.category === activeFilter);
   }, [todos, activeFilter]);
+  useEffect(() => {
+  if (weatherData && !hasAnimated) {
+    // Animasyon başladı
+    setTimeout(() => setHasAnimated(true), 7000); // 7 saniye sonra bileşeni tamamen kaldır
+  }
+}, [weatherData]);
 
   
 
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {!hasAnimated && weatherData && <WeatherOverlay condition={weatherData.condition} />}
 
       <ScreenWrapper>
         {/* HEADER BÖLÜMÜ */}

@@ -12,7 +12,6 @@ export const getWeatherData = async () => {
     const data = await res.json();
     const weather = data.current_weather;
 
-    // Kodları isimlere çeviriyoruz
     const interpretCode = (code: number) => {
         if (code === 0) return { txt: 'Güneşli', icon: 'weather-sunny' };
         if (code <= 3) return { txt: 'Parçalı Bulutlu', icon: 'weather-cloudy' };
