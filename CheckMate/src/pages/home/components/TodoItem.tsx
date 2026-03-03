@@ -16,12 +16,15 @@ import {
 type Props = {
   item: Todo;
   onToggle: (id: string) => void;
+  onPress: () => void;
 };
 
-const TodoItem = ({item, onToggle }: Props) => {
+const TodoItem = ({ item, onToggle, onPress }: Props) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const checkAnim = useRef(new Animated.Value(item.isCompleted ? 1 : 0)).current;
-  const categoryData = CATEGORIES.find(c => c.id === item.category);
+ const categoryData = useMemo(() => {
+    return CATEGORIES.find(c => c.id === item.category);
+  }, [item.category]);
 
   const formattedDate = useMemo(() => {
     const d = new Date(item.createdAt);
@@ -37,8 +40,8 @@ const TodoItem = ({item, onToggle }: Props) => {
     const isPast = d < now && !item.isCompleted;
 
     return {
-      text: d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + " - " + 
-            d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }),
+      text: d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + " - " +
+        d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }),
       isOverdue: isPast
     };
   }, [item.deadline, item.isCompleted]);
@@ -78,27 +81,39 @@ const TodoItem = ({item, onToggle }: Props) => {
     }
   };
 
-return (
+  return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <GlassCard 
-
         intensity={item.isCompleted ? 0.4 : 0.7} 
         style={styles.cardContainer}
       >
-        <TouchableOpacity onPress={handleToggle} activeOpacity={0.8} style={styles.inner}>
+        <View style={styles.inner}>
           
-          <View style={[
-            styles.checkbox,
-            item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
-          ]}>
-            <Animated.View style={{ transform: [{ scale: checkAnim.interpolate({
-              inputRange: [0, 0.5, 1],
-              outputRange: [0, 1.2, 1]
-            }) }] }}>
-              <MaterialCommunityIcons name="check-bold" size={12} color={theme.colors.white} />
-            </Animated.View>
-          </View>
-          <View style={styles.textWrapper}>
+
+          <TouchableOpacity 
+            onPress={handleToggle} 
+            activeOpacity={0.6}
+            style={styles.checkboxContainer} 
+          >
+            <View style={[
+              styles.checkbox,
+              item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+            ]}>
+              <Animated.View style={{ transform: [{ scale: checkAnim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, 1.2, 1]
+              }) }] }}>
+                <MaterialCommunityIcons name="check-bold" size={12} color={theme.colors.white} />
+              </Animated.View>
+            </View>
+          </TouchableOpacity>
+
+          {/* 2. ALAN: Metinler ve Detay (Detay Çekmecesini Açar) */}
+          <TouchableOpacity 
+            onPress={onPress} // Detay açma fonksiyonu buraya geldi
+            activeOpacity={0.7} 
+            style={styles.textWrapper}
+          >
             <Text style={[styles.title, item.isCompleted && styles.completedText]} numberOfLines={1}>
               {item.title}
             </Text>
@@ -121,34 +136,30 @@ return (
               )}
               <Text style={styles.dateText}>{formattedDate}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
+         {/* 3. SAĞ: Kategori Badge ve Paylaş (EKSİKTİ, EKLENDİ) */}
           <View style={styles.rightActions}>
-            <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
-
             {categoryData && (
-                <View style={[styles.categoryBadge, { backgroundColor: categoryData.color + '15' }]}>
-                  <MaterialCommunityIcons 
-                    name={categoryData.icon as any} 
-                    size={12} 
-                    color={categoryData.color} 
-                  />
-                  <Text style={[styles.categoryBadgeText, { color: categoryData.color }]}>
-                    {categoryData.label}
-                  </Text>
-                </View>
-              )}
+              <View style={[styles.categoryBadge, { backgroundColor: categoryData.color + '15' }]}>
+                <MaterialCommunityIcons 
+                  name={categoryData.icon as any} 
+                  size={12} 
+                  color={categoryData.color} 
+                />
+                <Text style={[styles.categoryBadgeText, { color: categoryData.color }]}>
+                  {categoryData.label}
+                </Text>
+              </View>
+            )}
+            <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
             
-            <TouchableOpacity 
-              onPress={() => onShare(item)} 
-              style={styles.glassShareButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
+            <TouchableOpacity onPress={() => onShare(item)} style={styles.glassShareButton}>
               <MaterialCommunityIcons name="share-variant" size={16} color={theme.colors.primary} />
             </TouchableOpacity>
           </View>
 
-        </TouchableOpacity>
+        </View>
       </GlassCard>
     </Animated.View>
   );
@@ -158,7 +169,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginHorizontal: 16,
     marginVertical: 6,
-  
+
   },
   inner: {
     flexDirection: "row",
@@ -247,6 +258,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  checkboxContainer: {
+    paddingVertical: 10,
+    paddingRight: 5,
   },
 });
 

@@ -4,10 +4,9 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetFlatList,
 } from "@gorhom/bottom-sheet";
+import { BlurView } from "expo-blur";
 import React, { useCallback, useMemo, useRef } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   visible: boolean;
@@ -25,7 +24,8 @@ const TodoBottomSheet = ({
   emptyMessage = "Görev bulunamadı",
 }: Props) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["50%", "85%"], []);
+  
+  const snapPoints = useMemo(() => ["65%", "80%"], []);
 
   React.useEffect(() => {
     if (visible) {
@@ -35,20 +35,28 @@ const TodoBottomSheet = ({
     }
   }, [visible]);
 
+
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        opacity={1}
         onPress={onClose}
-      />
+        style={[props.style, { backgroundColor: 'transparent' }]}
+      >
+        <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.05)' }]} />
+      </BottomSheetBackdrop>
     ),
     [onClose],
   );
 
-  const formatDate = (ts: number) => {
-    const d = new Date(ts);
+  //BUNU KULLANIRSIN DATE FORMATINDA
+  const formatDate = (dateValue: any) => {
+    if (!dateValue) return "-";
+    const d = new Date(dateValue);
     return `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1)
       .toString()
       .padStart(2, "0")}.${d.getFullYear()}`;
@@ -68,11 +76,14 @@ const TodoBottomSheet = ({
         >
           {item.title}
         </Text>
-        <Text style={styles.todoDate}>{formatDate(item.createdAt)}</Text>
+        <Text style={styles.todoDate}>
+            Oluşturulma: {formatDate(item.createdAt)}
+        </Text>
       </View>
       {item.isCompleted && (
         <View style={styles.completedBadge}>
-          <Text style={styles.completedBadgeText}>Tamamlandı</Text>
+          <MaterialCommunityIcons name="check-decagram" size={14} color="#16A34A" />
+          <Text style={styles.completedBadgeText}>Bitti</Text>
         </View>
       )}
     </View>
@@ -93,28 +104,27 @@ const TodoBottomSheet = ({
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{todos.length} görev</Text>
+          <View style={styles.subtitleRow}>
+            <View style={styles.dot} />
+            <Text style={styles.subtitle}>{todos.length} Görev Listeleniyor</Text>
+          </View>
         </View>
-        {/* <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-          <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
-        </TouchableOpacity> */}
       </View>
 
       {todos.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <MaterialCommunityIcons
-            name="check-circle-outline"
-            size={48}
-            color="#D1D5DB"
-          />
+          <View style={styles.emptyIconCircle}>
+            <MaterialCommunityIcons name="text-box-remove-outline" size={40} color="#6366F1" />
+          </View>
           <Text style={styles.emptyText}>{emptyMessage}</Text>
         </View>
       ) : (
         <BottomSheetFlatList
           data={todos}
-          keyExtractor={(_: Todo, index: number) => index.toString()}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       )}
@@ -126,73 +136,68 @@ export default TodoBottomSheet;
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: "#FAFAFA",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
   },
   handle: {
-    backgroundColor: "#D1D5DB",
-    width: 40,
+    backgroundColor: "#CBD5E1",
+    width: 45,
+    height: 4,
   },
-
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: "#F1F5F9",
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
-    letterSpacing: -0.3,
+    color: "#1E293B",
+    letterSpacing: -0.5,
+  },
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#6366F1",
   },
   subtitle: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontWeight: "500",
-    marginTop: 2,
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "600",
   },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   listContent: {
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 20,
+    paddingBottom: 40,
   },
   separator: {
-    height: 8,
+    height: 12,
   },
   todoItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 14,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 18,
+    padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#F0F0F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderColor: "#F1F5F9",
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: "#CBD5E1",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -205,44 +210,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   todoText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1F2937",
-    lineHeight: 20,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#334155",
   },
   todoTextDone: {
-    color: "#C4C9D4",
+    color: "#94A3B8",
     textDecorationLine: "line-through",
-    fontWeight: "400",
+    fontWeight: "500",
   },
   todoDate: {
-    fontSize: 11,
-    color: "#C4C9D4",
-    marginTop: 2,
+    fontSize: 12,
+    color: "#94A3B8",
+    fontWeight: "500",
+    marginTop: 4,
   },
   completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: "#DCFCE7",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
   completedBadgeText: {
-    fontSize: 10,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#16A34A",
   },
-
-  // Empty
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 12,
-    paddingBottom: 60,
+    paddingBottom: 80,
+    gap: 16,
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#EEF2FF",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
-    fontSize: 15,
-    color: "#9CA3AF",
-    fontWeight: "500",
+    fontSize: 16,
+    color: "#64748B",
+    fontWeight: "600",
   },
 });

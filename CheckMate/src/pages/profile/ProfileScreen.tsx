@@ -1,7 +1,6 @@
 import GlassCard from "@/src/components/GlassCard";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { theme } from "@/src/constants";
-import { Todo } from "@/src/constants/types";
 import { useTodoStore } from "@/src/services/useTodoStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -19,6 +18,7 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import TodoBottomSheet from "./components/TodoBottomSheet";
 import { WeeklyChart } from "./components/WeeklyChart";
 
 const AVATAR_COLORS = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
@@ -156,6 +156,7 @@ export default function ProfileScreen({ navigation }: any) {
       rate: total > 0 ? Math.round((completed / total) * 100) : 0
     };
   }, [todos]);
+  
 
   const userDesign = useMemo(() => {
     const colorIndex = username.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % AVATAR_COLORS.length;
@@ -163,9 +164,13 @@ export default function ProfileScreen({ navigation }: any) {
     return { color: AVATAR_COLORS[colorIndex], initials };
   }, [username]);
 
-  const [sheetData, setSheetData] = useState({ visible: false, title: "", data: [] as Todo[] });
+  
+
+  const [sheetData, setSheetData] = useState({ visible: false, title: "", fiter: "all" as "all" | "completed" | "pending" });
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  
 
   const analytics = useMemo(() => {
     const completedTodos = todos.filter(t => t.isCompleted);
@@ -177,12 +182,19 @@ export default function ProfileScreen({ navigation }: any) {
       dayCounts[day] = (dayCounts[day] || 0) + 1;
     });
     const topDay = Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "Henüz veri yok";
-
-    // KRİTİK DÜZELTME: Sadece bekleyen (yapılmamış) yüksek öncelikli görevler
     const activeHighPriority = todos.filter(t => !t.isCompleted && t.priority === 'High').length;
 
     return { topDay, activeHighPriority };
   }, [todos]);
+
+  const sheetTodos = useMemo(() => {
+  if (sheetData.fiter === "completed") return todos.filter(t => t.isCompleted);
+  if (sheetData.fiter === "pending") return todos.filter(t => !t.isCompleted);
+  return todos;
+}, [todos, sheetData.fiter]);
+
+  
+  
 
 
   useFocusEffect(
@@ -225,9 +237,9 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         <View style={styles.statsGrid}>
-          <StatCard icon="format-list-bulleted" value={stats.total} label="Toplam" color={theme.colors.primary} delay={100} onPress={() => setSheetData({ visible: true, title: "Tüm Görevler", data: todos })} />
-          <StatCard icon="check-all" value={stats.completed} label="Bitti" color={theme.colors.success} delay={200} onPress={() => setSheetData({ visible: true, title: "Tamamlananlar", data: todos.filter(t => t.isCompleted) })} />
-          <StatCard icon="timer-sand" value={stats.pending} label="Bekliyor" color={theme.colors.warning} delay={300} onPress={() => setSheetData({ visible: true, title: "Bekleyenler", data: todos.filter(t => !t.isCompleted) })} />
+          <StatCard icon="format-list-bulleted" value={stats.total} label="Toplam" color={theme.colors.primary} delay={100} onPress={() => setSheetData({ visible: true, title: "Tüm Görevler", fiter:"all" })} />
+          <StatCard icon="check-all" value={stats.completed} label="Bitti" color={theme.colors.success} delay={200} onPress={() => setSheetData({ visible: true, title: "Tamamlananlar", fiter:"completed" })} />
+          <StatCard icon="timer-sand" value={stats.pending} label="Bekliyor" color={theme.colors.warning} delay={300} onPress={() => setSheetData({ visible: true, title: "Bekleyenler", fiter:"pending" })} />
         </View>
 
         <View style={styles.chartWrapper}>
@@ -245,21 +257,21 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
           </GlassCard>
 
-          <GlassCard 
-            intensity={0.5} 
+          <GlassCard
+            intensity={0.5}
             style={[
-              styles.insightCard, 
-              analytics.activeHighPriority === 0 && { borderColor: theme.colors.success + '30' } 
+              styles.insightCard,
+              analytics.activeHighPriority === 0 && { borderColor: theme.colors.success + '30' }
             ]}
           >
             <View style={[
-              styles.iconCircle, 
+              styles.iconCircle,
               { backgroundColor: analytics.activeHighPriority > 0 ? '#EF444420' : theme.colors.success + '20' }
             ]}>
-              <MaterialCommunityIcons 
-                name={analytics.activeHighPriority > 0 ? "fire" : "check-decagram"} 
-                size={22} 
-                color={analytics.activeHighPriority > 0 ? "#EF4444" : theme.colors.success} 
+              <MaterialCommunityIcons
+                name={analytics.activeHighPriority > 0 ? "fire" : "check-decagram"}
+                size={22}
+                color={analytics.activeHighPriority > 0 ? "#EF4444" : theme.colors.success}
               />
             </View>
             <View style={styles.insightTextContainer}>
@@ -268,8 +280,8 @@ export default function ProfileScreen({ navigation }: any) {
                 styles.insightValue,
                 analytics.activeHighPriority === 0 && { color: theme.colors.success }
               ]}>
-                {analytics.activeHighPriority > 0 
-                  ? `${analytics.activeHighPriority} Bekleyen Görev` 
+                {analytics.activeHighPriority > 0
+                  ? `${analytics.activeHighPriority} Bekleyen Görev`
                   : "Tüm Kritik İşler Bitti! 🎉"}
               </Text>
             </View>
@@ -286,6 +298,12 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.versionText}>Versiyon 0.1.1</Text>
         </View>
       </ScrollView>
+      <TodoBottomSheet
+        visible={sheetData.visible}
+        title={sheetData.title}
+        todos={sheetTodos} 
+        onClose={() => setSheetData({ ...sheetData, visible: false })}
+      />
     </ScreenWrapper>
   );
 }
@@ -392,7 +410,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     gap: 15,
-    borderRadius: 24, 
+    borderRadius: 24,
   },
   iconCircle: {
     width: 48,
@@ -407,7 +425,7 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#94A3B8', 
+    color: '#94A3B8',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 2,
@@ -415,6 +433,6 @@ const styles = StyleSheet.create({
   insightValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B', 
+    color: '#1E293B',
   },
 });

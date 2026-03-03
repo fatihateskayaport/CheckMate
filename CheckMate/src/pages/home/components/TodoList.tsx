@@ -14,13 +14,13 @@ import { RectButton, Swipeable } from "react-native-gesture-handler";
 import { theme } from "@/src/constants";
 import { Todo } from "@/src/constants/types";
 
-import { layout } from "@/src/constants/layout";
 import TodoItem from "./TodoItem";
 
 type Props = {
   todos: Todo[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onPressItem: (todo: Todo) => void;
 };
 
 const RenderRightActions = ({
@@ -50,7 +50,7 @@ const RenderRightActions = ({
   );
 };
 
-const TodoList = ({ todos, onToggle, onDelete }: Props) => {
+const TodoList = ({ todos, onToggle, onDelete, onPressItem }: Props) => {
   const swipeableRefs = useRef<Map<string, Swipeable | null>>(new Map());
 
   const closeOtherSwipeables = useCallback((currentId: string) => {
@@ -69,6 +69,7 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
         onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
         friction={2}
         rightThreshold={40}
+        simultaneousHandlers={[]}
         renderRightActions={(progress) => (
           <RenderRightActions
             progress={progress}
@@ -76,13 +77,16 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
           />
         )}
       >
-        <TodoItem item={item} onToggle={onToggle} />
+        <TodoItem 
+          item={item} 
+          onToggle={onToggle} 
+          onPress={() => onPressItem(item)}
+        />
       </Swipeable>
     ),
-    [onToggle, onDelete, closeOtherSwipeables]
+    [onToggle, closeOtherSwipeables, onDelete, onPressItem]
   );
 
-  // Boş durum yönetimi (Empty State)
   if (todos.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -103,15 +107,21 @@ const TodoList = ({ todos, onToggle, onDelete }: Props) => {
 
   return (
     <FlatList
-      data={todos}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      contentContainerStyle={[styles.listContent, {paddingBottom: 100}]}
-      showsVerticalScrollIndicator={false}
-      removeClippedSubviews={Platform.OS === 'android'}
-      maxToRenderPerBatch={10}
-      windowSize={5}
-    />
+  data={todos}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={renderItem}
+  // Kritik Ayarlar:
+  contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
+  showsVerticalScrollIndicator={false}
+  // Her bir satırı bağımsız bir katman yapar, tıklama çakışmasını önler:
+  CellRendererComponent={({ children, ...props }) => (
+    <View {...props} style={[props.style, { zIndex: props.index === 0 ? 99 : 1 }]}>
+      {children}
+    </View>
+  )}
+  // Performans ve dokunma hassasiyeti için:
+  removeClippedSubviews={false} 
+/>
   );
 };
 
@@ -153,8 +163,8 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   emptyIconCircle: {
-    width: layout.window.width,
-    height: layout.window.height,
+    width: 80, 
+    height: 80, 
     borderRadius: 40,
     backgroundColor: theme.colors.primary + "10",
     justifyContent: 'center',
