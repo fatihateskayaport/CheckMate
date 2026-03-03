@@ -150,7 +150,7 @@ export default function AddScreen() {
             onPress={() => setIsDropdownOpen(!isDropdownOpen)}
             style={[
                 styles.dropdownTrigger,
-                !category && { borderColor: '#EF444450' } // Seçilmediyse hafif kırmızı kenarlık
+                !category && { borderColor: '#EF444450' }
             ]}
           >
             <View style={styles.dropdownValueWrapper}>

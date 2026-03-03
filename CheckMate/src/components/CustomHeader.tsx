@@ -1,117 +1,167 @@
-import { theme } from "@/src/constants";
 import { useTodoStore } from "@/src/services/useTodoStore";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useMemo } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { BlurView } from "expo-blur";
+import React, { useState } from "react";
+import { Image, LayoutAnimation, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type Props = {
   user: string;
-  title?: string; 
-  isHome?: boolean; 
+  weather?: { temp: number; condition: string; icon: string } | null;
+  isHome?: boolean;
 };
 
-export default function CustomHeader({ user, title, isHome = true }: Props) {
-  const navigation = useNavigation<any>();
+export default function CustomHeader({ user, weather, isHome = true }: Props) {
   const insets = useSafeAreaInsets();
   const userImage = useTodoStore((state) => state.userImage);
+  const navigation = useNavigation<any>();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const userDesign = useMemo(() => {
-    const initials = user.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-    const colors = ["#6C63FF", "#FF6584", "#43D9AD", "#F7A74B", "#3B82F6"];
-    const colorIndex = user.length % colors.length;
-    return { initials, color: colors[colorIndex] };
-  }, [user]);
+  const toggleSheet = () => {
+    if (!isHome) return; // AddScreen'de tıklamayı engelle
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsOpen(!isOpen);
+  };
 
   return (
-    <View style={[
-      styles.container, 
-      { paddingTop: insets.top + 10 } 
-    ]}>
-
-      <View style={styles.leftSection}>
-        {!isHome && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={{ fontSize: 24 }}>←</Text> 
-          </TouchableOpacity>
-        )}
-        
-        {isHome ? (
-          <View>
-            <Text style={styles.welcomeText}>Merhaba 👋</Text>
-            <Text style={styles.userName} numberOfLines={1}>{user}</Text>
+    <View style={[styles.outerWrapper, !isHome && { borderBottomWidth: 1, borderColor: '#F1F5F9' }]}>
+      {/* ANA HEADER */}
+      <View style={[styles.headerBody, { paddingTop: insets.top + 10 }]}>
+        <View style={styles.mainRow}>
+          
+          <View style={styles.leftSide}>
+            {!isHome ? (
+              // ADDSCREEN BAŞLIĞI
+              <View style={styles.backTitleRow}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                  <MaterialCommunityIcons name="chevron-left" size={32} color="#1E293B" />
+                </TouchableOpacity>
+                <Text style={styles.pageTitle}>Yeni Görev</Text>
+              </View>
+            ) : (
+              // ANA SAYFA KARŞILAMA VE HAVA DURUMU
+              <>
+                <Text style={styles.greeting}>Merhaba {user.split(' ')[0]} 👋</Text>
+                <TouchableOpacity onPress={toggleSheet} activeOpacity={0.7} style={styles.smartChip}>
+                  <MaterialCommunityIcons name={weather?.icon as any || 'weather-sunny'} size={14} color="#6366F1" />
+                  <Text style={styles.chipText}>{weather ? `${weather.temp}°C • ${weather.condition}` : 'Hava Durumu'}</Text>
+                  <MaterialCommunityIcons name={isOpen ? "chevron-up" : "chevron-down"} size={14} color="#6366F1" style={{marginLeft: 4}} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
-        ) : (
-          <Text style={styles.pageTitle}>{title}</Text>
-        )}
+
+          {/* PROFİL FOTOĞRAFI (Her zaman orada) */}
+          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+            <View style={styles.avatarWrapper}>
+              {userImage ? (
+                <Image source={{ uri: userImage }} style={styles.avatar} />
+              ) : (
+                <View style={styles.initials}><Text style={styles.initialsText}>{user[0]}</Text></View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <TouchableOpacity 
-        onPress={() => navigation.navigate("Profile")} 
-        activeOpacity={0.7}
-      >
-        <View style={[styles.avatarFrame, { borderColor: userImage ? theme.colors.primary : "white" }]}>
-          {userImage ? (
-            <Image source={{ uri: userImage }} style={styles.avatarImage} />
-          ) : (
-            <View style={[styles.initialsCircle, { backgroundColor: userDesign.color }]}>
-              <Text style={styles.initialsText}>{userDesign.initials}</Text>
+      {/* ÜSTTEN AŞAĞI AÇILAN PANEL (Sadece isHome ise çalışır) */}
+      {isHome && isOpen && (
+        <View style={styles.sheetContainer}>
+          <BlurView intensity={80} tint="light" style={styles.glassPanel}>
+            <View style={styles.contentRow}>
+              <View style={styles.infoBox}>
+                <Text style={styles.infoLabel}>Bugün</Text>
+                <Text style={styles.infoValue}>{new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</Text>
+              </View>
+              <View style={styles.verticalDivider} />
+              <View style={styles.infoBox}>
+                <Text style={styles.infoLabel}>Hava</Text>
+                <Text style={styles.infoValue}>{weather?.temp ?? '--'}°C</Text>
+              </View>
+              <View style={styles.verticalDivider} />
+              <View style={styles.infoBox}>
+                <Text style={styles.infoLabel}>Durum</Text>
+                <Text style={styles.infoValue}>{weather?.condition ?? 'Bulutlu'}</Text>
+              </View>
             </View>
-          )}
+            <View style={styles.adviceBox}>
+                <Text style={styles.adviceText}>✨ Bugün odaklanman için harika bir gün, hadi listeni eritelim!</Text>
+            </View>
+          </BlurView>
         </View>
-      </TouchableOpacity>
+      )}
+
+      {/* ÇEKME TUTAMAĞI (Sadece isHome ise gözükür) */}
+      {isHome && (
+        <TouchableOpacity onPress={toggleSheet} style={styles.dragHandle}>
+           <View style={styles.handleBar} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-  leftSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  welcomeText: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    fontWeight: "500",
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: theme.colors.textPrimary,
-  },
-  pageTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: theme.colors.textPrimary,
-  },
-  backButton: {
-    paddingRight: 8,
-  },
-  avatarFrame: {
-    width: 48,
-    height: 48,
-    borderRadius: 22,
-    borderWidth: 2,
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
+  outerWrapper: {
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    zIndex: 1000,
     elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderColor: theme.colors.primary,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
-  avatarImage: { width: "100%", height: "100%" },
-  initialsCircle: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
-  initialsText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  headerBody: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  mainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  leftSide: { flex: 1 },
+  greeting: { fontSize: 22, fontWeight: '800', color: '#1E293B' },
+  smartChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+  },
+  chipText: { fontSize: 12, fontWeight: '700', color: '#475569', marginLeft: 5 },
+  avatarWrapper: { width: 44, height: 44, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#E2E8F0' },
+  avatar: { width: '100%', height: '100%' },
+  initials: { flex: 1, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center' },
+  initialsText: { color: 'white', fontWeight: 'bold', fontSize: 18 },
+  
+  // ADDSCREEN ÖZEL STİLLER
+  backTitleRow: { flexDirection: 'row', alignItems: 'center' },
+  backButton: { marginLeft: -10, marginRight: 5 },
+  pageTitle: { fontSize: 20, fontWeight: '800', color: '#1E293B' },
+
+  // SHEET STILLERI
+  sheetContainer: { paddingHorizontal: 20, paddingVertical: 15 },
+  glassPanel: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: 'rgba(99, 102, 241, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.1)',
+    overflow: 'hidden',
+  },
+  contentRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  infoBox: { alignItems: 'center', flex: 1 },
+  infoLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase' },
+  infoValue: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginTop: 4 ,textAlign:'center'},
+  verticalDivider: { width: 1, height: 30, backgroundColor: '#E2E8F0' },
+  adviceBox: { marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
+  adviceText: { fontSize: 13, color: '#6366F1', fontWeight: '600', textAlign: 'center', fontStyle: 'italic' },
+  
+  dragHandle: { width: '100%', height: 20, justifyContent: 'center', alignItems: 'center' },
+  handleBar: { width: 36, height: 4, backgroundColor: '#E2E8F0', borderRadius: 2 }
 });

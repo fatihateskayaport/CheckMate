@@ -16,7 +16,9 @@ import NiceButton from "@/src/components/NiceButton";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { globalStyles } from "@/src/constants/globalStyles";
 import TodoList from "@/src/pages/home/components/TodoList";
+import { getWeatherData } from "@/src/services/weatherService";
 import TodoDetailSheet from "./components/TodoDeatailSheet";
+
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -30,9 +32,29 @@ export default function Home({ route, navigation }: Props) {
   const toggleTodo = useTodoStore((state) => state.toggleTodo);
   const deleteTodo = useTodoStore((state) => state.deleteTodo);
 
+  const [weatherData, setWeatherData] = useState<any>(null);
+const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+
+
+  
+useEffect(() => {
+  const loadDashboard = async () => {
+    try {
+      setIsWeatherLoading(true);
+      const data = await getWeatherData();
+      setWeatherData(data);
+    } catch (error) {
+      console.error("Dashboard yükleme hatası:", error);
+    } finally {
+      setIsWeatherLoading(false);
+    }
+  };
+
+  loadDashboard();
+}, []);
+
   const shareAllTodos = async (todos: Todo[]) => {
     const pendingTodos = todos.filter(t => !t.isCompleted);
-
     if (pendingTodos.length === 0) {
       Alert.alert("Liste Boş", "Paylaşılacak bekleyen görev bulunamadı.");
       return;
@@ -59,6 +81,8 @@ export default function Home({ route, navigation }: Props) {
     return todos.filter(todo => todo.category === activeFilter);
   }, [todos, activeFilter]);
 
+  
+
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -66,9 +90,15 @@ export default function Home({ route, navigation }: Props) {
       <ScreenWrapper>
         {/* HEADER BÖLÜMÜ */}
         <View style={styles.headerContainer}>
-          <CustomHeader user={user} />
+          <CustomHeader user={user} weather={weatherData}/>
         </View>
 
+        {/* <SmartPanel 
+          data={weatherData} 
+          isLoading={isWeatherLoading} 
+          userName={user}
+        /> */}
+        
         {/* FİLTRELEME BÖLÜMÜ (Scrollable Chips) */}
         <View style={{ marginVertical: 10, zIndex: 10 }}>
           <ScrollView

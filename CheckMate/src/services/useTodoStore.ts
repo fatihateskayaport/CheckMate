@@ -33,7 +33,6 @@ export const useTodoStore = create<TodoState>()(
       setUsername: (name: string) => set({ username: name }),
       setUserImage: (uri) => set({ userImage: uri }),
 
-      // GÜNCELLEME: Fonksiyon parametrelerine 'category' eklendi
       addTodo: (title, priority, deadline, description, notificationId?, category = 'Personal') => {
         const newTodo: Todo = {
           id: Date.now().toString(),
@@ -44,7 +43,7 @@ export const useTodoStore = create<TodoState>()(
           isCompleted: false,
           createdAt: new Date().toISOString(),
           notificationId,
-          category, // <-- Artık dışarıdan gelen kategori buraya yazılıyor
+          category,
         };
         
         set((state) => ({ 
