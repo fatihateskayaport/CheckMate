@@ -8,7 +8,7 @@ import {
   Platform,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 import { RectButton, Swipeable } from "react-native-gesture-handler";
 
@@ -24,6 +24,7 @@ type Props = {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onPressItem: (todo: Todo) => void;
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 };
 
 const RenderRightActions = ({
@@ -81,7 +82,7 @@ const RenderRightActions = ({
   );
 };
 
-const TodoList = ({ todos, onToggle, onDelete, onPressItem }: Props) => {
+const TodoList = ({ todos, onToggle, onDelete, onPressItem, ListHeaderComponent }: Props) => {
   const swipeableRefs = useRef<Map<string, Swipeable | null>>(new Map());
 
   const closeOtherSwipeables = useCallback((currentId: string) => {
@@ -100,7 +101,6 @@ const TodoList = ({ todos, onToggle, onDelete, onPressItem }: Props) => {
         onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
         friction={2}
         rightThreshold={40}
-        simultaneousHandlers={[]}
         renderRightActions={(progress) => (
           <RenderRightActions
             progress={progress}
@@ -118,41 +118,41 @@ const TodoList = ({ todos, onToggle, onDelete, onPressItem }: Props) => {
     [onToggle, closeOtherSwipeables, onDelete, onPressItem]
   );
 
+  
   if (todos.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <MaterialCommunityIcons
-            name="clipboard-text-outline"
-            size={40}
-            color={theme.colors.primary}
-          />
+          <MaterialCommunityIcons name="clipboard-text-outline" size={40} color={theme.colors.primary} />
         </View>
         <Text style={styles.emptyTitle}>Henüz Görev Yok</Text>
-        <Text style={styles.emptySubtitle}>
-          Planlarını buraya ekleyerek üretkenliğini artırabilirsin.
-        </Text>
       </View>
     );
   }
 
+
   return (
     <FlatList
-  data={todos}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={renderItem}
-  // Kritik Ayarlar:
-  contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
-  showsVerticalScrollIndicator={false}
-  // Her bir satırı bağımsız bir katman yapar, tıklama çakışmasını önler:
-  CellRendererComponent={({ children, ...props }) => (
-    <View {...props} style={[props.style, { zIndex: props.index === 0 ? 99 : 1 }]}>
-      {children}
-    </View>
-  )}
-  // Performans ve dokunma hassasiyeti için:
-  removeClippedSubviews={false} 
-/>
+      data={todos}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id}
+
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      removeClippedSubviews={Platform.OS === 'android'}
+      ListHeaderComponent={ListHeaderComponent} 
+      contentContainerStyle={styles.listContent}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconCircle}>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={40} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>Henüz Görev Yok</Text>
+        </View>
+      }
+    />
   );
 };
 
@@ -161,7 +161,7 @@ export default TodoList;
 const styles = StyleSheet.create({
   listContent: {
     paddingVertical: theme.layout.spacing.md,
-
+    paddingBottom: 150, 
     flexGrow: 1,
   },
   deleteWrapper: {

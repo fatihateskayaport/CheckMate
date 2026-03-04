@@ -108,7 +108,7 @@ export default function CustomHeader({ user, weather, isHome = true }: Props) {
 
       {/* ÇEKME TUTAMAĞI (Sadece isHome ise gözükür) */}
       {isHome && (
-        <TouchableOpacity onPress={toggleSheet} style={styles.dragHandle}>
+        <TouchableOpacity onPress={toggleSheet}>
            <View style={styles.handleBar} />
         </TouchableOpacity>
       )}
@@ -120,18 +120,19 @@ const styles = StyleSheet.create({
   outerWrapper: {
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    zIndex: 1000,
     elevation: 4,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
+    backgroundColor: 'transparent'
   },
   headerBody: {
     paddingHorizontal: 20,
     paddingBottom: 8,
+    backgroundColor: 'transparent'
   },
   mainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  leftSide: { flex: 1 },
+  leftSide: { flex: 1},
   greeting: { fontSize: 22, fontWeight: '800', color: '#1E293B' },
   smartChip: {
     flexDirection: 'row',
