@@ -2,10 +2,12 @@ import GlassCard from "@/src/components/GlassCard";
 import { theme } from "@/src/constants";
 import { CATEGORIES, Todo } from "@/src/constants/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo, useRef } from "react";
 import {
   Alert,
   Animated,
+  Platform,
   Share,
   StyleSheet,
   Text,
@@ -22,7 +24,7 @@ type Props = {
 const TodoItem = ({ item, onToggle, onPress }: Props) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const checkAnim = useRef(new Animated.Value(item.isCompleted ? 1 : 0)).current;
- const categoryData = useMemo(() => {
+  const categoryData = useMemo(() => {
     return CATEGORIES.find(c => c.id === item.category);
   }, [item.category]);
 
@@ -65,10 +67,22 @@ const TodoItem = ({ item, onToggle, onPress }: Props) => {
   }, [checkAnim, item.isCompleted]);
 
   const handleToggle = () => {
+
+    if (Platform.OS !== 'web') {
+
+      if (!item.isCompleted) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+
+
     Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.96, duration: 100, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.94, duration: 80, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }),
     ]).start();
+
     onToggle(item.id);
   };
 
@@ -83,35 +97,49 @@ const TodoItem = ({ item, onToggle, onPress }: Props) => {
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <GlassCard 
-        intensity={item.isCompleted ? 0.4 : 0.7} 
-        style={styles.cardContainer}
+      <GlassCard
+        intensity={item.isCompleted ? 0.3 : 0.7}
+        style={[
+          styles.cardContainer,
+          item.isCompleted && { opacity: 0.8 }
+        ]}
       >
         <View style={styles.inner}>
-          
 
-          <TouchableOpacity 
-            onPress={handleToggle} 
-            activeOpacity={0.6}
-            style={styles.checkboxContainer} 
+
+          <TouchableOpacity
+            onPress={handleToggle}
+            activeOpacity={0.8}
+            style={styles.checkboxContainer}
           >
             <View style={[
               styles.checkbox,
-              item.isCompleted && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+              item.isCompleted && {
+                backgroundColor: theme.colors.primary,
+                borderColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+                shadowOpacity: 0.3,
+                shadowRadius: 5,
+                elevation: 5
+              }
             ]}>
-              <Animated.View style={{ transform: [{ scale: checkAnim.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [0, 1.2, 1]
-              }) }] }}>
+              <Animated.View style={{
+                transform: [{
+                  scale: checkAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, 1.4, 1] 
+                  })
+                }]
+              }}>
                 <MaterialCommunityIcons name="check-bold" size={12} color={theme.colors.white} />
               </Animated.View>
             </View>
           </TouchableOpacity>
 
           {/* 2. ALAN: Metinler ve Detay (Detay Çekmecesini Açar) */}
-          <TouchableOpacity 
-            onPress={onPress} // Detay açma fonksiyonu buraya geldi
-            activeOpacity={0.7} 
+          <TouchableOpacity
+            onPress={onPress} 
+            activeOpacity={0.7}
             style={styles.textWrapper}
           >
             <Text style={[styles.title, item.isCompleted && styles.completedText]} numberOfLines={1}>
@@ -138,14 +166,14 @@ const TodoItem = ({ item, onToggle, onPress }: Props) => {
             </View>
           </TouchableOpacity>
 
-         {/* 3. SAĞ: Kategori Badge ve Paylaş (EKSİKTİ, EKLENDİ) */}
+          {/* 3. SAĞ: Kategori Badge ve Paylaş (EKSİKTİ, EKLENDİ) */}
           <View style={styles.rightActions}>
             {categoryData && (
               <View style={[styles.categoryBadge, { backgroundColor: categoryData.color + '15' }]}>
-                <MaterialCommunityIcons 
-                  name={categoryData.icon as any} 
-                  size={12} 
-                  color={categoryData.color} 
+                <MaterialCommunityIcons
+                  name={categoryData.icon as any}
+                  size={12}
+                  color={categoryData.color}
                 />
                 <Text style={[styles.categoryBadgeText, { color: categoryData.color }]}>
                   {categoryData.label}
@@ -153,7 +181,7 @@ const TodoItem = ({ item, onToggle, onPress }: Props) => {
               </View>
             )}
             <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
-            
+
             <TouchableOpacity onPress={() => onShare(item)} style={styles.glassShareButton}>
               <MaterialCommunityIcons name="share-variant" size={16} color={theme.colors.primary} />
             </TouchableOpacity>

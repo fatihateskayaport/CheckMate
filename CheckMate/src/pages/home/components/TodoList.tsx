@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useCallback, useRef } from "react";
 import {
+  Alert,
   Animated,
   FlatList,
   ListRenderItemInfo,
@@ -13,6 +14,8 @@ import { RectButton, Swipeable } from "react-native-gesture-handler";
 
 import { theme } from "@/src/constants";
 import { Todo } from "@/src/constants/types";
+
+import * as Haptics from 'expo-haptics';
 
 import TodoItem from "./TodoItem";
 
@@ -31,6 +34,34 @@ const RenderRightActions = ({
   onDelete: () => void;
 }) => {
 
+  const handleDeletePress = () => {
+    // 1. Önce hafif bir uyarı titreşimi
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
+    // 2. Onay Penceresi
+    Alert.alert(
+      "Görevi Sil",
+      "Bu görevi silmek istediğinize emin misiniz?",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { 
+          text: "Sil", 
+          style: "destructive", 
+          onPress: () => {
+            // Silme onaylanırsa asıl silme fonksiyonunu çağır
+            onDelete();
+            // Başarı titreşimi
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   const translateX = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [80, 0],
@@ -40,7 +71,7 @@ const RenderRightActions = ({
     <View style={styles.deleteWrapper}>
       <Animated.View style={[styles.deleteAction, { transform: [{ translateX }] }]}>
         <RectButton
-          onPress={onDelete}
+          onPress={handleDeletePress}
           style={styles.deleteButton}
         >
           <MaterialCommunityIcons name="trash-can-outline" size={24} color={theme.colors.white} />

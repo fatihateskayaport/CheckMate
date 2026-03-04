@@ -66,7 +66,7 @@ export default function CustomHeader({ user, weather, isHome = true }: Props) {
             )}
           </View>
 
-          {/* PROFİL FOTOĞRAFI (Her zaman orada) */}
+        
           <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
             <View style={styles.avatarWrapper}>
               {userImage ? (
@@ -79,7 +79,7 @@ export default function CustomHeader({ user, weather, isHome = true }: Props) {
         </View>
       </View>
 
-      {/* ÜSTTEN AŞAĞI AÇILAN PANEL (Sadece isHome ise çalışır) */}
+     
       {isHome && isOpen && (
         <View style={styles.sheetContainer}>
           <BlurView intensity={80} tint="light" style={styles.glassPanel}>

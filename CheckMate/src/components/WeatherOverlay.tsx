@@ -21,7 +21,7 @@ export const WeatherOverlay = ({ condition }: { condition: string | undefined })
         ])
       ])
     ]).start();
-  }, []);
+  }, [fadeAnim, moveAnim]);
 
   const renderAnimation = () => {
     const cond = condition?.toLowerCase() || "";

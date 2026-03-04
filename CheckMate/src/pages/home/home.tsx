@@ -39,7 +39,6 @@ const [isWeatherLoading, setIsWeatherLoading] = useState(true);
 const [hasAnimated, setHasAnimated] = useState(false);
 
 
-  
 useEffect(() => {
   const loadDashboard = async () => {
     try {
@@ -89,7 +88,7 @@ useEffect(() => {
     // Animasyon başladı
     setTimeout(() => setHasAnimated(true), 7000); // 7 saniye sonra bileşeni tamamen kaldır
   }
-}, [weatherData]);
+}, [hasAnimated, weatherData]);
 
   
 

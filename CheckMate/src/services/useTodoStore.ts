@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { notificationService } from "./notificationService";
 
+
 interface TodoState {
   todos: Todo[];
   username: string;
@@ -68,20 +69,23 @@ export const useTodoStore = create<TodoState>()(
       },
 
       deleteTodo: async (id: string) => {
-        set((state) => {
-          const todoToDelete = state.todos.find((t) => t.id === id);
-          if (todoToDelete?.notificationId) {
-            notificationService.cancelNotification(todoToDelete.notificationId)
-              .catch(err => console.log("Bildirim silinirken hata oluştu:", err));
-          }
-          return {
-            todos: state.todos.filter((todo) => todo.id !== id),
-          };
-        });
-      },
+        const currentTodos = get().todos;
+        const todoToDelete = currentTodos.find((t) => t.id === id);
 
+        if (todoToDelete?.notificationId) {
+          try {
+            await notificationService.cancelNotification(todoToDelete.notificationId);
+          } catch (err) {
+            console.log("Bildirim iptal hatası:", err);
+          }
+        }
+        set((state) => ({
+          todos: state.todos.filter((todo) => todo.id !== id),
+        }));
+      },
       clearTodos: () => set({ todos: [] }),
     }),
+
     {
       name: 'checkmate-storage', 
       storage: createJSONStorage(() => AsyncStorage),
