@@ -1,3 +1,4 @@
+import { theme } from "@/src/constants";
 import { Todo } from "@/src/constants/types";
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -33,15 +34,16 @@ const PrioritySelector = ({ selected, onSelect }: Props) => {
 export default PrioritySelector;
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', width: '100%', marginVertical: 15 },
+  container: { flexDirection: 'row', width: '100%', marginVertical: 8 },
   button: {
     flex: 1, padding: 12, marginHorizontal: 4, borderRadius: 10,
     borderWidth: 1, borderColor: '#eee', alignItems: 'center', backgroundColor: '#f9f9f9'
   },
-  text: { fontSize: 13, color: '#666', fontWeight: '500' },
-  activeText: { color: '#fff', fontWeight: 'bold' },
+  text: { fontSize: 13, color: theme.colors.textPrimary, fontWeight: '500' },
+  activeText: { color: theme.colors.textPrimary, fontWeight: 'bold' },
 
   selected_Low: { backgroundColor: '#2ecc71', borderColor: '#27ae60' },
   selected_Medium: { backgroundColor: '#f1c40f', borderColor: '#f39c12' },
   selected_High: { backgroundColor: '#e74c3c', borderColor: '#c0392b' },
 }) as any;
+

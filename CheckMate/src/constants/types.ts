@@ -6,6 +6,7 @@ export type Todo = {
   deadline: string;
   isCompleted: boolean;
   createdAt: string;
+  targetDate?: string |  null;
   notificationId?: string;
   category: CategoryType;
 };

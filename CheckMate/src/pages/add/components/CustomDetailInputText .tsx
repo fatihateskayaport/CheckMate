@@ -76,7 +76,6 @@ export default CustomInputDetail;
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
     alignItems: 'center' 
   },
   label: {
@@ -84,12 +83,12 @@ const styles = StyleSheet.create({
     marginLeft: '11%', 
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.textPrimary,
     marginBottom: 5,
     textTransform: 'uppercase'
   },
   inputWrapper: {
-    width: Dimensions.get("screen").width * 0.88,
+    width: Dimensions.get("screen").width * 0.9,
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
   input: {
     flex:1,
     fontSize: 16,
-    color: "#333",
+    color: theme.colors.textPrimary,
     lineHeight: 22,
   },
   inputError: {
@@ -123,7 +122,7 @@ const styles = StyleSheet.create({
     top: 15,
   },
   errorText: {
-    color: "#ff4d4d",
+    color: theme.colors.textPrimary,
     marginTop: 6,
     fontSize: 12,
     alignSelf: 'flex-start',
@@ -134,6 +133,6 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 15,
     fontSize: 11,
-    color: "#bbb",
+    color: theme.colors.textPrimary,
   },
 });

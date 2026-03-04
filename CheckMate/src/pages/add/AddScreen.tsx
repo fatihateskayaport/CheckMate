@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -28,10 +28,31 @@ import CustomInput from "./components/CustomInputText";
 import FormDatePicker from "./components/FormDatePicker";
 import PrioritySelector from "./components/PrioritySelector";
 
+interface DayOption {
+  fullDate: string;
+  dayName: string;
+  dayNumber: number;
+}
+
 export default function AddScreen() {
   const navigation = useNavigation<any>();
   const username = useTodoStore((state) => state.username);
   const addTodoInStore = useTodoStore((state) => state.addTodo);
+
+  const [selectedTargetDate, setSelectedTargetDate] = useState<string | null>(null);
+  const weekDays = useMemo<DayOption[]>(() => {
+    const days: DayOption[] = [];
+    for (let i = 0; i < 14; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      days.push({
+        fullDate: date.toISOString().split('T')[0],
+        dayName: date.toLocaleDateString('tr-TR', { weekday: 'short' }),
+        dayNumber: date.getDate(),
+      });
+    }
+    return days;
+  }, []);
 
 
   const [todoTitle, setTodoTitle] = useState("");
@@ -67,7 +88,7 @@ export default function AddScreen() {
         text2: 'Lütfen devam etmek için bir kategori belirleyin.',
         position: 'bottom',
       });
-      return; 
+      return;
     }
 
     try {
@@ -117,7 +138,7 @@ export default function AddScreen() {
 
   return (
     <ScreenWrapper>
-      <CustomHeader user={username} title="Yeni Görev" isHome={false} />
+      <CustomHeader user={username} isHome={false} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -143,65 +164,70 @@ export default function AddScreen() {
               onChangeText={setDescription}
               maxLength={200}
             />
-            <GlassCard intensity={0.7} style={styles.glassSection}>
-          <Text style={styles.sectionLabel}>Kategori (Zorunlu)</Text>
-          
-          <TouchableOpacity 
-            onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-            style={[
-                styles.dropdownTrigger,
-                !category && { borderColor: '#EF444450' }
-            ]}
-          >
-            <View style={styles.dropdownValueWrapper}>
-              {category ? (
-                <>
-                  <MaterialCommunityIcons 
-                    name={CATEGORIES.find(c => c.id === category)?.icon as any} 
-                    size={22} 
-                    color={CATEGORIES.find(c => c.id === category)?.color} 
-                  />
-                  <Text style={styles.dropdownSelectedText}>
-                    {CATEGORIES.find(c => c.id === category)?.label}
-                  </Text>
-                </>
-              ) : (
-                <Text style={styles.placeholderText}>Bir kategori seçin...</Text>
-              )}
-            </View>
-            <MaterialCommunityIcons 
-              name={isDropdownOpen ? "chevron-up" : "chevron-down"} 
-              size={24} 
-              color="#64748B" 
-            />
-          </TouchableOpacity>
 
-          {isDropdownOpen && (
-            <Animated.View entering={FadeIn} style={styles.dropdownMenu}>
-              {CATEGORIES.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setCategory(item.id as CategoryType);
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  <View style={[styles.miniIconBg, { backgroundColor: item.color + '15' }]}>
-                    <MaterialCommunityIcons name={item.icon as any} size={18} color={item.color} />
-                  </View>
-                  <Text style={styles.dropdownItemText}>{item.label}</Text>
-                  {category === item.id && (
-                    <MaterialCommunityIcons name="check" size={20} color={theme.colors.primary} />
+
+
+            <GlassCard intensity={0.7} style={styles.glassSection}>
+              <Text style={styles.sectionLabel}>Kategori (Zorunlu)</Text>
+
+              <TouchableOpacity
+                onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                style={[
+                  styles.dropdownTrigger,
+                  !category && { borderColor: '#EF444450' }
+                ]}
+              >
+                <View style={styles.dropdownValueWrapper}>
+                  {category ? (
+                    <>
+                      <MaterialCommunityIcons
+                        name={CATEGORIES.find(c => c.id === category)?.icon as any}
+                        size={22}
+                        color={CATEGORIES.find(c => c.id === category)?.color}
+                      />
+                      <Text style={styles.dropdownSelectedText}>
+                        {CATEGORIES.find(c => c.id === category)?.label}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.placeholderText}>Bir kategori seçin...</Text>
                   )}
-                </TouchableOpacity>
-              ))}
-            </Animated.View>
-          )}
-        </GlassCard>
+                </View>
+                <MaterialCommunityIcons
+                  name={isDropdownOpen ? "chevron-up" : "chevron-down"}
+                  size={24}
+                  color="#64748B"
+                />
+              </TouchableOpacity>
+
+              {isDropdownOpen && (
+                <Animated.View entering={FadeIn} style={styles.dropdownMenu}>
+                  {CATEGORIES.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setCategory(item.id as CategoryType);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <View style={[styles.miniIconBg, { backgroundColor: item.color + '15' }]}>
+                        <MaterialCommunityIcons name={item.icon as any} size={18} color={item.color} />
+                      </View>
+                      <Text style={styles.dropdownItemText}>{item.label}</Text>
+                      {category === item.id && (
+                        <MaterialCommunityIcons name="check" size={20} color={theme.colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </Animated.View>
+              )}
+            </GlassCard>
 
             <View style={styles.selectorsContainer}>
               <GlassCard intensity={0.7} style={styles.glassSelector}>
+                <Text style={styles.sectionLabel}>Öncelik Belirle</Text>
+
                 <PrioritySelector selected={priority} onSelect={setPriority} />
               </GlassCard>
 
@@ -212,6 +238,72 @@ export default function AddScreen() {
                 />
               </GlassCard>
             </View>
+
+              <GlassCard intensity={0.6} style={styles.reminderGlass}>
+                <View style={styles.reminderHeader}>
+                  <View style={styles.reminderTitleWrapper}>
+                    <MaterialCommunityIcons
+                      name={selectedTargetDate ? "calendar-check-outline" : "calendar-blank-outline"}
+                      size={20}
+                      color={selectedTargetDate ? theme.colors.primary : "#9CA3AF"}
+                    />
+                    <Text style={styles.sectionTitle}>Hedef Tarih Belirle</Text>
+                  </View>
+                  <Switch
+                    // Switch açıksa (true) bir tarih seçili demektir. 
+                    // Kapatılırsa (false) tarih null olur ve görev "Süresiz" olur.
+                    value={!!selectedTargetDate}
+                    onValueChange={(val) => {
+                      if (val) {
+                        // Açıldığında varsayılan olarak bugünü seç
+                        setSelectedTargetDate(new Date().toISOString().split('T')[0]);
+                      } else {
+                        // Kapatıldığında tarihi null yap (Süresiz Görev)
+                        setSelectedTargetDate(null);
+                      }
+                    }}
+                    trackColor={{ false: "#D1D5DB", true: theme.colors.primary + "60" }}
+                    thumbColor={selectedTargetDate ? theme.colors.primary : "#F3F4F6"}
+                  />
+                </View>
+
+                {selectedTargetDate && (
+                  <Animated.View entering={FadeIn} style={styles.optionsRow}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: 12, paddingBottom: 5 }}
+                    >
+                      {weekDays.map((item) => {
+                        const isSelected = selectedTargetDate === item.fullDate;
+                        return (
+                          <TouchableOpacity
+                            key={item.fullDate}
+                            onPress={() => setSelectedTargetDate(item.fullDate)}
+                            activeOpacity={0.8}
+                            style={[
+                              styles.dateColumn,
+                              isSelected && styles.dateColumnActive
+                            ]}
+                          >
+                            <Text style={[styles.dayName, isSelected && styles.textActive]}>
+                              {item.dayName}
+                            </Text>
+
+                            <View style={[styles.dayCircle, isSelected && styles.dayCircleActive]}>
+                              <Text style={[styles.dayNumber, isSelected && styles.textActive]}>
+                                {item.dayNumber}
+                              </Text>
+                            </View>
+
+                            {isSelected && <View style={styles.activeDot} />}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </Animated.View>
+                )}
+              </GlassCard>
 
             <GlassCard intensity={0.6} style={styles.reminderGlass}>
               <View style={styles.reminderHeader}>
@@ -272,7 +364,7 @@ export default function AddScreen() {
 const styles = StyleSheet.create({
   flex1: { flex: 1 },
   scrollContent: { paddingBottom: 60 },
-  formContainer: { paddingHorizontal: 20, paddingTop: 15, gap: 20 },
+  formContainer: { paddingHorizontal: 20, paddingTop: 15, gap: 16 },
 
   glassGroup: {
     padding: 15,
@@ -296,12 +388,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 15
   },
-
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: "#1F2937",
-  },
   optionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -322,10 +408,10 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 12,
-    color: "#4B5563",
+    color: theme.colors.textPrimary,
   },
   activeOptionText: {
-    color: 'white',
+    color: theme.colors.textPrimary,
     fontWeight: 'bold',
   },
   buttonWrapper: {
@@ -342,22 +428,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10
   },
-glassSection: {
+  glassSection: {
     padding: 16,
     borderRadius: 24,
-    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: theme.colors.textPrimary,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
   },
-  
+
   dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -369,8 +454,8 @@ glassSection: {
     borderColor: 'rgba(0,0,0,0.05)',
   },
   dropdownValueWrapper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dropdownSelectedText: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
-  placeholderText: { color: '#94A3B8', fontSize: 15 },
+  dropdownSelectedText: { fontSize: 15, fontWeight: '600', color: theme.colors.textPrimary },
+  placeholderText: { color: theme.colors.textPrimary, fontSize: 15 },
   dropdownMenu: {
     marginTop: 10,
     backgroundColor: 'rgba(255,255,255,0.8)',
@@ -387,12 +472,124 @@ glassSection: {
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.03)',
   },
-  dropdownItemText: { flex: 1, fontSize: 14, color: '#475569', fontWeight: '500' },
-  miniIconBg: { 
-    width: 34, 
-    height: 34, 
-    borderRadius: 10, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  dropdownItemText: { flex: 1, fontSize: 14, color: theme.colors.textPrimary, fontWeight: '500' },
+  miniIconBg: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
+  dateSelectorRow: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  dateChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.1)',
+    gap: 8,
+  },
+  dateChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  dateChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: theme.colors.primary,
+  },
+  dateChipTextActive: {
+    color: theme.colors.white,
+  },
+
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+  glassCalendarContainer: {
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  calendarScroll: {
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  dateColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 55,
+    height: 85,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  dateColumnActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+  },
+  dayName: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  dayCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayCircleActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  dayNumber: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+  },
+  textActive: {
+    color: theme.colors.textPrimary,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FFFFFF',
+    marginTop: 4,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  clearDateText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    textTransform: 'uppercase',
+    backgroundColor: theme.colors.primary + '15', // Çok hafif bir arka plan
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  // Tarihsiz (Süresiz) kartı için özel ikon stili
+  infinityIcon: {
+    marginBottom: 4,
+  }
 });

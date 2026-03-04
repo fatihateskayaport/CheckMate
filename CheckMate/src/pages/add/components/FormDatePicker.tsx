@@ -92,7 +92,7 @@ const FormDatePicker = ({ date, onDateChange }: Props) => {
         <MaterialCommunityIcons 
           name={show ? "chevron-up" : "chevron-right"} 
           size={20} 
-          color="#9CA3AF" 
+          color= {theme.colors.primary}
         />
       </TouchableOpacity>
 
@@ -123,15 +123,16 @@ const FormDatePicker = ({ date, onDateChange }: Props) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginBottom: 8,
     width: '100%',
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#4B5563",
-    marginBottom: 8,
-    marginLeft: 4,
+   fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 12,
   },
   pickerButton: {
     flexDirection: 'row',
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#1F2937",
+    color: theme.colors.textPrimary,
   },
   pickerWrapper: {
     marginTop: 8,

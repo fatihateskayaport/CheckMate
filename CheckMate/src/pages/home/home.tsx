@@ -20,6 +20,12 @@ import TodoList from "@/src/pages/home/components/TodoList";
 import { getWeatherData } from "@/src/services/weatherService";
 import TodoDetailSheet from "./components/TodoDeatailSheet";
 
+interface DayOption {
+  fullDate: string;
+  dayName: string;
+  dayNumber: number;
+}
+
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -33,28 +39,32 @@ export default function Home({ route, navigation }: Props) {
   const toggleTodo = useTodoStore((state) => state.toggleTodo);
   const deleteTodo = useTodoStore((state) => state.deleteTodo);
 
+  const { selectedDate, setSelectedDate } = useTodoStore();
+
   const [weatherData, setWeatherData] = useState<any>(null);
-const [isWeatherLoading, setIsWeatherLoading] = useState(true);
-
-const [hasAnimated, setHasAnimated] = useState(false);
+  const [isWeatherLoading, setIsWeatherLoading] = useState(true);
 
 
-useEffect(() => {
-  const loadDashboard = async () => {
-    try {
-      setIsWeatherLoading(true);
-      const data = await getWeatherData();
-      setWeatherData(data);
-    } catch (error) {
-      console.error("Dashboard yükleme hatası:", error);
-    } finally {
-      setIsWeatherLoading(false);
-    }
-  };
-  
 
-  loadDashboard();
-}, []);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setIsWeatherLoading(true);
+        const data = await getWeatherData();
+        setWeatherData(data);
+      } catch (error) {
+        console.error("Dashboard yükleme hatası:", error);
+      } finally {
+        setIsWeatherLoading(false);
+      }
+    };
+
+
+    loadDashboard();
+  }, []);
 
   const shareAllTodos = async (todos: Todo[]) => {
     const pendingTodos = todos.filter(t => !t.isCompleted);
@@ -79,18 +89,36 @@ useEffect(() => {
 
   const isEmpty = todos.length === 0;
 
-  const filteredTodos = useMemo(() => {
-    if (activeFilter === 'All') return todos;
-    return todos.filter(todo => todo.category === activeFilter);
-  }, [todos, activeFilter]);
-  useEffect(() => {
-  if (weatherData && !hasAnimated) {
-    // Animasyon başladı
-    setTimeout(() => setHasAnimated(true), 7000); // 7 saniye sonra bileşeni tamamen kaldır
-  }
-}, [hasAnimated, weatherData]);
 
-  
+  // useTodoStore içindeki filtreleme mantığı (home.tsx'de kullanacağın kısım)
+  const filteredTodos = useMemo(() => {
+    return todos.filter(todo => {
+      // 1. Durum: Eğer "Hepsi" seçiliyse her şeyi göster
+      if (selectedDate === 'All') return true;
+
+      // 2. Durum: Tarihi olmayan (null/undefined) görevler HER ZAMAN gözüksün
+      if (!todo.targetDate) return true;
+
+      // 3. Durum: Sadece seçili güne ait olanlar gözüksün
+      return todo.targetDate === selectedDate;
+    });
+  }, [todos, selectedDate]);
+
+  const weekDays = useMemo<DayOption[]>(() => {
+    const days: DayOption[] = [];
+    for (let i = -3; i < 11; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      days.push({
+        fullDate: date.toISOString().split('T')[0],
+        dayName: date.toLocaleDateString('tr-TR', { weekday: 'short' }),
+        dayNumber: date.getDate(),
+      });
+    }
+    return days;
+  }, []);
+
+
 
   return (
 
@@ -100,7 +128,7 @@ useEffect(() => {
       <ScreenWrapper>
         {/* HEADER BÖLÜMÜ */}
         <View style={styles.headerContainer}>
-          <CustomHeader user={user} weather={weatherData}/>
+          <CustomHeader user={user} weather={weatherData} />
         </View>
 
         {/* <SmartPanel 
@@ -108,9 +136,71 @@ useEffect(() => {
           isLoading={isWeatherLoading} 
           userName={user}
         /> */}
-        
-        {/* FİLTRELEME BÖLÜMÜ (Scrollable Chips) */}
-        <View style={{ marginVertical: 10, zIndex: 10 }}>
+
+        {/* FİLTRELEME BÖLÜMLERİ (Scrollable Chips) */}
+        <View style={styles.calendarWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.calendarScroll}
+          >
+            {/* 1. HER ZAMAN (TARİHSİZ GÖREVLER) KARTU */}
+            <TouchableOpacity
+              onPress={() => setSelectedDate('All')} // 'All' veya null mantığı
+              activeOpacity={0.8}
+            >
+              <GlassCard
+                intensity={selectedDate === 'All' ? 0.8 : 0.3}
+                style={[
+                  styles.dateCard,
+                  selectedDate === 'All' && styles.dateCardActive
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="infinity"
+                  size={18}
+                  color={selectedDate === 'All' ? "#000" : "rgba(255,255,255,0.4)"}
+                />
+                <Text style={[styles.dayName, selectedDate === 'All' && styles.textActive]}>Hepsi</Text>
+              </GlassCard>
+            </TouchableOpacity>
+
+            {/* 2. GÜNLÜK TARİH KARTLARI */}
+            {weekDays.map((item) => {
+              const isSelected = selectedDate === item.fullDate;
+              const isToday = item.fullDate === new Date().toISOString().split('T')[0];
+
+              return (
+                <TouchableOpacity
+                  key={item.fullDate}
+                  onPress={() => setSelectedDate(item.fullDate)}
+                  activeOpacity={0.8}
+                >
+                  <GlassCard
+                    intensity={isSelected ? 0.8 : 0.3} // Seçiliyse daha opak, değilse daha şeffaf
+                    style={[
+                      styles.dateCard,
+                      isSelected && styles.dateCardActive
+                    ]}
+                  >
+                    <Text style={[styles.dayName, isSelected && styles.textActive]}>
+                      {item.dayName}
+                    </Text>
+                    <Text style={[styles.dayNumber, isSelected && styles.textActive]}>
+                      {item.dayNumber}
+                    </Text>
+
+                    {/* Bugün işaretçisi */}
+                    {isToday && !isSelected && <View style={styles.todayDot} />}
+                    {/* Seçili gün altındaki nokta */}
+                    {isSelected && <View style={styles.todayDot} />}
+                  </GlassCard>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+        <View style={{ zIndex: 10 }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -297,4 +387,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
   },
+
+  calendarWrapper: {
+    marginBottom: 16,
+    backgroundColor: 'transparent',
+  },
+  calendarScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  dateCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 55,
+    height: 75,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  dateCardActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+  },
+  dayName: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  dayNumber: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+  },
+  textActive: {
+    color: theme.colors.textPrimary,
+  },
+  todayDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FFFFFF',
+    marginTop: 4,
+  }
 });

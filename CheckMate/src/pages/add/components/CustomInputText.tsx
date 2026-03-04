@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 14,
     paddingRight: 38,
-    color: "#333",
+    color: theme.colors.textPrimary,
   },
   inputError: {
     borderColor: "#ff4d4d",
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#ff4d4d",
+    color: theme.colors.textPrimary,
     marginTop: 4,
     fontSize: 12,
   },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     right: 20,
     fontSize: 11,
-    color: "#bbb",
+    color: theme.colors.textPrimary,
     paddingLeft: 4,
   },
 });

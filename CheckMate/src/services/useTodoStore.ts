@@ -4,20 +4,22 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { notificationService } from "./notificationService";
 
-
 interface TodoState {
   todos: Todo[];
   username: string;
   userImage: string | null;
+  selectedDate: string;
   setUsername: (name: string) => void;
   setUserImage: (uri: string | null) => void;
+  setSelectedDate: (date: string) => void;
   addTodo: (
     title: string, 
     priority: Todo['priority'], 
     deadline: string, 
     description?: string, 
     notificationId?: string,
-    category?: CategoryType 
+    category?: CategoryType,
+    targetDate?: string | null,    
   ) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
@@ -30,19 +32,23 @@ export const useTodoStore = create<TodoState>()(
       todos: [],
       username: 'Misafir',
       userImage: null,
+      selectedDate: new Date().toISOString().split('T')[0],
 
       setUsername: (name: string) => set({ username: name }),
       setUserImage: (uri) => set({ userImage: uri }),
+      setSelectedDate: (date: string) => set({ selectedDate: date }),
 
-      addTodo: (title, priority, deadline, description, notificationId?, category = 'Personal') => {
+      addTodo: (title, priority, deadline, description, notificationId?, category = 'Personal', targetDate?) => {
+        const dateNow = new Date();
         const newTodo: Todo = {
           id: Date.now().toString(),
-          title: title,
-          description: description,
-          priority: priority,
-          deadline: deadline,
+          title,
+          description,
+          priority,
+          deadline,
           isCompleted: false,
-          createdAt: new Date().toISOString(),
+          createdAt: dateNow.toISOString(),
+          targetDate: targetDate || null,
           notificationId,
           category,
         };
@@ -53,10 +59,10 @@ export const useTodoStore = create<TodoState>()(
       },
 
       toggleTodo: (id: string) => {
-        const currentTodos = get().todos;
-        const updated = currentTodos.map((todo) =>
+        const updated = get().todos.map((todo) =>
           todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
         );
+
 
         const sorted = updated.sort((a, b) => {
           if (a.isCompleted !== b.isCompleted) {
@@ -69,8 +75,7 @@ export const useTodoStore = create<TodoState>()(
       },
 
       deleteTodo: async (id: string) => {
-        const currentTodos = get().todos;
-        const todoToDelete = currentTodos.find((t) => t.id === id);
+        const todoToDelete = get().todos.find((t) => t.id === id);
 
         if (todoToDelete?.notificationId) {
           try {
@@ -79,13 +84,14 @@ export const useTodoStore = create<TodoState>()(
             console.log("Bildirim iptal hatası:", err);
           }
         }
+        
         set((state) => ({
           todos: state.todos.filter((todo) => todo.id !== id),
         }));
       },
+
       clearTodos: () => set({ todos: [] }),
     }),
-
     {
       name: 'checkmate-storage', 
       storage: createJSONStorage(() => AsyncStorage),
