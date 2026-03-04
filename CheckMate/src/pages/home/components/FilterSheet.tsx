@@ -1,10 +1,12 @@
 import GlassCard from "@/src/components/GlassCard";
 import { CATEGORIES, CategoryType, theme } from "@/src/constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { BlurView } from "expo-blur";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
+
 
 type Props = {
   isVisible: boolean;
@@ -16,17 +18,17 @@ type Props = {
   weekDays: any[];
 };
 
-const FilterSheet = ({ 
-  isVisible, 
-  onClose, 
-  activeFilter, 
-  setActiveFilter, 
-  selectedDate, 
-  setSelectedDate, 
-  weekDays 
+const FilterSheet = ({
+  isVisible,
+  onClose,
+  activeFilter,
+  setActiveFilter,
+  selectedDate,
+  setSelectedDate,
+  weekDays
 }: Props) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%", "70%"], []);
+  const snapPoints = useMemo(() => ["70%", "70%"], []);
 
   // Açılma/Kapanma Kontrolü
   useEffect(() => {
@@ -54,30 +56,40 @@ const FilterSheet = ({
     []
   );
 
-  return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1} // Başlangıçta kapalı
-      snapPoints={snapPoints}
-      enablePanDownToClose={true}
-      onClose={onClose}
-      backdropComponent={renderBackdrop}
-      handleIndicatorStyle={{ backgroundColor: "#CBD5E1", width: 50, height: 4 }}
-      backgroundStyle={styles.sheetBackground}
-      enableDynamicSizing={false}
-    >
-      <BottomSheetView style={styles.content}>
-        <Text style={styles.title}>Filtrele & Düzenle</Text>
+return (
+  <BottomSheet
+    ref={bottomSheetRef}
+    index={-1}
+    snapPoints={snapPoints}
+    enablePanDownToClose={true}
+    onClose={onClose}
+    backdropComponent={renderBackdrop}
+    handleIndicatorStyle={{ backgroundColor: "#CBD5E1", width: 50, height: 4 }}
+    backgroundStyle={styles.sheetBackground}
+    enableDynamicSizing={false}
+    activeOffsetX={[-5, 5]} 
+  >
+    <BottomSheetView style={styles.content}>
+      <Text style={styles.title}>Filtrele & Düzenle</Text>
 
-        {/* TARİH SEÇİMİ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tarih Seçimi</Text>
-          <BottomSheetScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
+      {/* TARİH SEÇİMİ */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tarih Seçimi</Text>
+        <View style={{ height: 95 }}> 
+          {/* 🚀 ÇÖZÜM: BottomSheet içindeki yatay kaydırmalar için standart ScrollView + simültane handler */}
+          <GestureScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollPadding}
+            // Çekmecenin dikey hareketini bu alan içinde durdurur
+            disallowInterruption={true} 
+            scrollEventThrottle={16}
           >
-            <TouchableOpacity onPress={() => setSelectedDate('All')} activeOpacity={0.7}>
+            <TouchableOpacity 
+              onPress={() => setSelectedDate('All')} 
+              activeOpacity={0.7}
+              style={{ marginRight: 4 }}
+            >
               <GlassCard intensity={selectedDate === 'All' ? 0.8 : 0.2} style={[styles.dateCard, selectedDate === 'All' && styles.activeCard]}>
                 <MaterialCommunityIcons name="infinity" size={20} color={selectedDate === 'All' ? theme.colors.primary : "#94A3B8"} />
                 <Text style={styles.cardText}>Hepsi</Text>
@@ -85,48 +97,59 @@ const FilterSheet = ({
             </TouchableOpacity>
 
             {weekDays.map((item) => (
-              <TouchableOpacity key={item.fullDate} onPress={() => setSelectedDate(item.fullDate)} activeOpacity={0.7}>
+              <TouchableOpacity 
+                key={item.fullDate} 
+                onPress={() => setSelectedDate(item.fullDate)} 
+                activeOpacity={0.7}
+              >
                 <GlassCard intensity={selectedDate === item.fullDate ? 0.8 : 0.2} style={[styles.dateCard, selectedDate === item.fullDate && styles.activeCard]}>
                   <Text style={styles.cardText}>{item.dayName}</Text>
                   <Text style={styles.dayNum}>{item.dayNumber}</Text>
                 </GlassCard>
               </TouchableOpacity>
             ))}
-          </BottomSheetScrollView>
+          </GestureScrollView>
         </View>
+      </View>
 
-        {/* KATEGORİ SEÇİMİ */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kategoriler</Text>
-          <View style={styles.categoryGrid}>
-            <TouchableOpacity onPress={() => setActiveFilter('All')} style={styles.categoryItem}>
-              <GlassCard intensity={activeFilter === 'All' ? 0.8 : 0.2} style={[styles.catChip, activeFilter === 'All' && styles.activeCard]}>
-                <Text style={styles.cardText}>Tümü</Text>
+      {/* KATEGORİ SEÇİMİ */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Kategoriler</Text>
+        <View style={styles.categoryGrid}>
+          <TouchableOpacity onPress={() => setActiveFilter('All')} style={styles.categoryItem}>
+            <GlassCard intensity={activeFilter === 'All' ? 0.8 : 0.2} style={[styles.catChip, activeFilter === 'All' && styles.activeCard]}>
+              <Text style={styles.cardText}>Tümü</Text>
+            </GlassCard>
+          </TouchableOpacity>
+
+          {CATEGORIES.map((cat) => (
+            <TouchableOpacity key={cat.id} onPress={() => setActiveFilter(cat.id as CategoryType)} style={styles.categoryItem}>
+              <GlassCard intensity={activeFilter === cat.id ? 0.8 : 0.2} style={[styles.catChip, activeFilter === cat.id && { borderColor: cat.color, borderWidth: 1.5 }]}>
+                <MaterialCommunityIcons name={cat.icon as any} size={16} color={cat.color} />
+                <Text style={styles.cardText}>{cat.label}</Text>
               </GlassCard>
             </TouchableOpacity>
-
-            {CATEGORIES.map((cat) => (
-              <TouchableOpacity key={cat.id} onPress={() => setActiveFilter(cat.id as CategoryType)} style={styles.categoryItem}>
-                <GlassCard intensity={activeFilter === cat.id ? 0.8 : 0.2} style={[styles.catChip, activeFilter === cat.id && { borderColor: cat.color, borderWidth: 1.5 }]}>
-                  <MaterialCommunityIcons name={cat.icon as any} size={16} color={cat.color} />
-                  <Text style={styles.cardText}>{cat.label}</Text>
-                </GlassCard>
-              </TouchableOpacity>
-            ))}
-          </View>
+          ))}
         </View>
+      </View>
 
-        {/* UYGULA BUTONU */}
-        <TouchableOpacity style={styles.applyButton} onPress={onClose}>
-          <Text style={styles.applyButtonText}>Filtreleri Uygula</Text>
-        </TouchableOpacity>
-      </BottomSheetView>
-    </BottomSheet>
-  );
+      {/* UYGULA BUTONU */}
+      <TouchableOpacity 
+        style={styles.applyButton} 
+        onPress={() => {
+           // Önce çekmeceyi kapatıp sonra aksiyon almak daha doğal hissettirir
+           bottomSheetRef.current?.close();
+        }}
+      >
+        <Text style={styles.applyButtonText}>Filtreleri Uygula</Text>
+      </TouchableOpacity>
+    </BottomSheetView>
+  </BottomSheet>
+);
 };
 
 const styles = StyleSheet.create({
-  sheetBackground: { 
+  sheetBackground: {
     backgroundColor: theme.colors.white,
     borderRadius: 35,
     ...Platform.select({
@@ -138,7 +161,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "800", color: "#1E293B", textAlign: 'center', marginBottom: 10 },
   section: { gap: 12 },
   sectionTitle: { fontSize: 11, fontWeight: "800", color: "#94A3B8", textTransform: 'uppercase', letterSpacing: 1 },
-  
+
   scrollPadding: { paddingBottom: 10, gap: 12 },
   dateCard: { width: 65, height: 75, justifyContent: 'center', alignItems: 'center', borderRadius: 18 },
   activeCard: { borderColor: theme.colors.primary, borderWidth: 2 },

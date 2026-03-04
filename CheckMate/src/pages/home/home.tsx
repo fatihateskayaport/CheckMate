@@ -121,10 +121,6 @@ export default function Home({ route, navigation }: Props) {
 return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {!hasAnimated && weatherData && <WeatherOverlay condition={weatherData.condition} />}
-      
-      
-        
-
       <ScreenWrapper>
         <CustomHeader user={user} weather={weatherData} />
         <TodoList
@@ -142,7 +138,7 @@ return (
       activeOpacity={0.8}
     >
       <GlassCard intensity={0.6} style={styles.mergedShareInner}>
-        <MaterialCommunityIcons name="export-variant" size={20} color={theme.colors.primary} />
+        <MaterialCommunityIcons name="export-variant" size={26} color={theme.colors.primary} />
         {/* <Text style={styles.mergedShareText}>Paylaş</Text> */}
       </GlassCard>
     </TouchableOpacity>
@@ -152,7 +148,7 @@ return (
     style={styles.mergedFilterBtn} 
     onPress={() => setIsFilterVisible(true)}
     activeOpacity={0.8}
-  >
+  > 
     <GlassCard intensity={0.6} style={styles.mergedFilterInner}>
       <MaterialCommunityIcons name="filter-variant" size={26} color="white" />
       {(activeFilter !== 'All' || selectedDate !== 'All') && (
@@ -348,18 +344,20 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   mergedShareBtn: {
-    height: 56,
+    height: 60,
+    width: 60,
   },
   mergedShareInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    width: '100%',
     height: '100%',
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-    gap: 8,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   mergedShareText: {
     fontSize: 15,

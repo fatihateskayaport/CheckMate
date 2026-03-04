@@ -5,6 +5,7 @@ import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import { Image, LayoutAnimation, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { theme } from "../constants";
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -129,9 +130,10 @@ const styles = StyleSheet.create({
   headerBody: {
     paddingHorizontal: 20,
     paddingBottom: 8,
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    height: theme.layout.window.width * .34
   },
-  mainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  mainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flex:1 },
   leftSide: { flex: 1},
   greeting: { fontSize: 22, fontWeight: '800', color: '#1E293B' },
   smartChip: {
